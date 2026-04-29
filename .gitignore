@@ -1,0 +1,25 @@
+# Python cache / temp
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual env
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+
+# Local datasets and generated outputs
+datasetDemo/
+output/
+
+# Local design docs / prototypes
+markdowm/
+
+# Notebook / logs
+*.ipynb_checkpoints
+*.log
+
