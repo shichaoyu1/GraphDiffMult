@@ -1,0 +1,33 @@
+[
+  {
+    "epoch": 1,
+    "train": {
+      "total": 3.839804490407308,
+      "alignment": 3.08266274134318,
+      "cons": 14.18893051147461,
+      "decouple": 0.036381042251984276,
+      "diff": 0.9466290473937988,
+      "graph_energy": 14.18893051147461
+    },
+    "val": {
+      "total": 6.710262298583984,
+      "alignment": 5.998328685760498,
+      "cons": 13.353326797485352,
+      "decouple": 0.052066344767808914,
+      "diff": 0.8749286532402039,
+      "graph_energy": 13.353326797485352,
+      "recall@1": 0.0,
+      "recall@5": 0.6666666666666666,
+      "recall@10": 1.0,
+      "mrr": 0.19166666666666665,
+      "pair_auc": 0.4175824175824176,
+      "average_positive_similarity": -0.04392627945968083,
+      "average_negative_similarity": 0.016632788814604282,
+      "positive_negative_distance_gap": -0.05321289124069639,
+      "anchor_consistency": -0.06055906827428511,
+      "edge_precision@10": 0.1,
+      "edge_precision@25": 0.24,
+      "edge_precision@50": 0.21212121212121213
+    }
+  }
+]

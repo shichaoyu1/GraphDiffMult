@@ -1,0 +1,90 @@
+[
+  {
+    "key": "1p19q_codel::non co-deleted",
+    "label": "1p19Q CODEL non co-deleted",
+    "field": "1p19Q CODEL",
+    "value": "non co-deleted",
+    "source": "Gene",
+    "node_type": "molecular-marker"
+  },
+  {
+    "key": "idh::mutated",
+    "label": "IDH mutated",
+    "field": "IDH",
+    "value": "mutated",
+    "source": "Gene",
+    "node_type": "molecular-marker"
+  },
+  {
+    "key": "idh::wild type",
+    "label": "IDH wild type",
+    "field": "IDH",
+    "value": "wild type",
+    "source": "Gene",
+    "node_type": "molecular-marker"
+  },
+  {
+    "key": "mgmt::methylated",
+    "label": "MGMT methylated",
+    "field": "MGMT",
+    "value": "methylated",
+    "source": "Gene",
+    "node_type": "molecular-marker"
+  },
+  {
+    "key": "tumor_grade::2",
+    "label": "Pathology grade 2",
+    "field": "Tumor Grade",
+    "value": "2",
+    "source": "Pathology",
+    "node_type": "pathology-grade"
+  },
+  {
+    "key": "tumor_grade::3",
+    "label": "Pathology grade 3",
+    "field": "Tumor Grade",
+    "value": "3",
+    "source": "Pathology",
+    "node_type": "pathology-grade"
+  },
+  {
+    "key": "tumor_grade::4",
+    "label": "Pathology grade 4",
+    "field": "Tumor Grade",
+    "value": "4",
+    "source": "Pathology",
+    "node_type": "pathology-grade"
+  },
+  {
+    "key": "tumor_type::astrocytoma, anaplastic",
+    "label": "Pathology ASTROCYTOMA, ANAPLASTIC",
+    "field": "Tumor Type",
+    "value": "ASTROCYTOMA, ANAPLASTIC",
+    "source": "Pathology",
+    "node_type": "pathology-diagnosis"
+  },
+  {
+    "key": "tumor_type::astrocytoma, infiltrating",
+    "label": "Pathology ASTROCYTOMA, INFILTRATING",
+    "field": "Tumor Type",
+    "value": "ASTROCYTOMA, INFILTRATING",
+    "source": "Pathology",
+    "node_type": "pathology-diagnosis"
+  },
+  {
+    "key": "tumor_type::glioblastoma",
+    "label": "Pathology GLIOBLASTOMA",
+    "field": "Tumor Type",
+    "value": "GLIOBLASTOMA",
+    "source": "Pathology",
+    "node_type": "pathology-diagnosis"
+  },
+  {
+    "key": "tumor_type::glioma, high-grade",
+    "label": "Pathology GLIOMA, HIGH-GRADE",
+    "field": "Tumor Type",
+    "value": "GLIOMA, HIGH-GRADE",
+    "source": "Pathology",
+    "node_type": "pathology-diagnosis"
+  }
+]

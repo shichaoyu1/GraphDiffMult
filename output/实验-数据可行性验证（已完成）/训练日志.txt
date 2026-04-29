@@ -1,0 +1,48 @@
+
+[步骤 1] 加载体数据用于切片展示...
+  体数据形状: (240, 240, 155)
+  肿瘤非零体素: 240373
+
+[步骤 1b] 生成多模态切片展示图...
+[图1] 切片展示已保存: ./output\brats_slices.png
+
+[步骤 2] 构建 Patch 数据集...
+加载病人数据: D:\code\pythonProject\PygMonAI\brats_fusion\datasetDemo\BraTS2021_00060
+  体数据形状: (240, 240, 155)
+  肿瘤非零体素: 240373
+  有效切片数 (肿瘤≥100px): 79
+  成功提取 patch 数: 200
+  标签分布: {0: 88, 1: 85, 2: 27}  (0=背景, 1=水肿/坏死, 2=增强)
+
+[步骤 3] 构建多模态融合网络...
+  总参数量: 815,235
+
+[步骤 4] 开始训练...
+
+────────────────────────────────────────────────────────────
+  训练配置: epochs=60, lr=0.0003, λ_diff=0.1, λ_graph=0.05
+  设备: CUDA
+────────────────────────────────────────────────────────────
+  Epoch    1/60  total=1.0487  task=0.8904  diff=0.9905  graph=1.1841
+  Epoch   10/60  total=0.4889  task=0.3528  diff=0.9831  graph=0.7556
+  Epoch   20/60  total=0.4581  task=0.3344  diff=0.9423  graph=0.5878
+  Epoch   30/60  total=0.3278  task=0.2192  diff=0.8431  graph=0.4856
+  Epoch   40/60  total=0.2393  task=0.1379  diff=0.7891  graph=0.4497
+  Epoch   50/60  total=0.1390  task=0.0451  diff=0.7380  graph=0.4015
+  Epoch   60/60  total=0.1421  task=0.0479  diff=0.7360  graph=0.4113
+────────────────────────────────────────────────────────────
+
+[步骤 5] 准备推理数据...
+
+[步骤 6] 生成可视化...
+[图2] 训练结果综合图已保存: ./output\brats_results.png
+[图3] 扩散过程图已保存: ./output\diffusion_process.png
+[图4] 图拓扑已保存: ./output\graph_topology.png
+
+════════════════════════════════════════════════════════════
+  全部完成！输出目录: D:\code\pythonProject\PygMonAI\brats_fusion\output
+    brats_slices.png      — 四模态三视图切片
+    brats_results.png     — 训练结果综合图
+    diffusion_process.png — 扩散过程专项图
+    graph_topology.png    — 图拓扑可视化
+════════════════════════════════════════════════════════════

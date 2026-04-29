@@ -1,0 +1,35 @@
+[
+  {
+    "epoch": 1,
+    "train": {
+      "total": 2.0694255034128823,
+      "task": 0.6901377439498901,
+      "cons": 26.440950393676758,
+      "anchor": 0.12497783948977788,
+      "decouple": 0.02632673333088557,
+      "diff": 1.0145631631215413,
+      "graph_energy": 26.440950393676758,
+      "auc": 0.5555555555555556,
+      "accuracy": 0.5,
+      "f1_macro": 0.48571428571428577,
+      "balanced_accuracy": 0.5,
+      "sensitivity_macro": 0.5,
+      "specificity_macro": 0.5
+    },
+    "val": {
+      "total": 2.4729394912719727,
+      "task": 0.6891813278198242,
+      "cons": 34.526363372802734,
+      "anchor": 0.12756161391735077,
+      "decouple": 0.017857901751995087,
+      "diff": 1.0176588296890259,
+      "graph_energy": 34.526363372802734,
+      "auc": 1.0,
+      "accuracy": 0.5,
+      "f1_macro": 0.3333333333333333,
+      "balanced_accuracy": 0.5,
+      "sensitivity_macro": 0.5,
+      "specificity_macro": 0.5
+    }
+  }
+]

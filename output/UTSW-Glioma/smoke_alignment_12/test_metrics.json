@@ -1,0 +1,15 @@
+{
+  "total": 2.0190658569335938,
+  "task": 0.6900761723518372,
+  "cons": 25.32230567932129,
+  "anchor": 0.15416601300239563,
+  "decouple": 0.03318238630890846,
+  "diff": 1.0966840982437134,
+  "graph_energy": 25.32230567932129,
+  "auc": 1.0,
+  "accuracy": 0.5,
+  "f1_macro": 0.3333333333333333,
+  "balanced_accuracy": 0.5,
+  "sensitivity_macro": 0.5,
+  "specificity_macro": 0.5
+}

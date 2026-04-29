@@ -1,0 +1,42 @@
+{
+  "recall@1": 1.0,
+  "recall@5": 1.0,
+  "recall@10": 1.0,
+  "mrr": 1.0,
+  "pair_auc": 1.0,
+  "average_positive_similarity": 0.39568406343460083,
+  "average_negative_similarity": -0.07155757583677769,
+  "positive_negative_distance_gap": 0.35398221015930176,
+  "anchor_consistency": 0.4672416392713785,
+  "edge_precision@10": 0.1111111111111111,
+  "edge_precision@25": 0.1111111111111111,
+  "edge_precision@50": 0.1111111111111111,
+  "case_count": 1,
+  "query_count": 1,
+  "anchor_count": 9,
+  "pathology_unavailable": {
+    "recall@1": 1.0,
+    "recall@5": 1.0,
+    "recall@10": 1.0,
+    "mrr": 1.0,
+    "pair_auc": 1.0,
+    "average_positive_similarity": 0.39568406343460083,
+    "average_negative_similarity": -0.10746622582276662,
+    "positive_negative_distance_gap": 0.3793564637502034,
+    "anchor_consistency": 0.5031502892573675,
+    "edge_precision@10": 0.25,
+    "edge_precision@25": 0.25,
+    "edge_precision@50": 0.25
+  },
+  "molecular_unavailable": {
+    "recall@1": NaN,
+    "recall@5": NaN,
+    "recall@10": NaN,
+    "mrr": NaN,
+    "pair_auc": NaN,
+    "average_positive_similarity": NaN,
+    "average_negative_similarity": NaN,
+    "positive_negative_distance_gap": NaN,
+    "anchor_consistency": NaN
+  }
+}

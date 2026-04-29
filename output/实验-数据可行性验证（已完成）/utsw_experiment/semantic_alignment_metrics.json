@@ -1,0 +1,11 @@
+{
+  "task": "idh",
+  "node_mode": "regions",
+  "max_cases": 50,
+  "case_count": 50,
+  "mean_distance_to_anchor": {
+    "Necrotic/Core": 0.5482777190208435,
+    "Edema": 0.5518557333946228,
+    "Enhancing": 0.545163140296936
+  }
+}
