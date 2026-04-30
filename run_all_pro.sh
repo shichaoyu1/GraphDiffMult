@@ -4,8 +4,8 @@ set -euo pipefail
 RUN_ID="${RUN_ID:-$(date +%Y%m%d_%H%M%S)}"
 PYTHON_BIN="${PYTHON_BIN:-python}"
 
-DATA_ROOT="${DATA_ROOT:-/root/autodl-tmp/UTSW-Glioma}"
-METADATA_TSV="${METADATA_TSV:-/root/autodl-tmp/UTSW_Glioma_Metadata-2-1.tsv}"
+DATA_ROOT="${DATA_ROOT:-/root/autodl-tmp/dataset/UTSW-Glioma}"
+METADATA_TSV="${METADATA_TSV:-/root/autodl-tmp/dataset/UTSW_Glioma_Metadata-2-1.tsv}"
 
 EPOCHS="${EPOCHS:-30}"
 BATCH_SIZE="${BATCH_SIZE:-4}"
