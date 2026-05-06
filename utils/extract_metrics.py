@@ -73,6 +73,11 @@ def run_fields(run_dir):
         fields["variant"] = config.get("variant", "")
         fields["seed"] = config.get("seed", "")
         fields["task"] = config.get("task", "")
+        fields["graph_type"] = config.get("graph_type", "")
+        fields["node_mode"] = config.get("node_mode", "")
+        fields["lambda_cons"] = config.get("lambda_cons", "")
+        fields["lambda_diff"] = config.get("lambda_diff", "")
+        fields["lambda_decouple"] = config.get("lambda_decouple", "")
 
     semantic_path = run_dir / "semantic_alignment_metrics.json"
     test_path = run_dir / "test_metrics.json"
@@ -126,6 +131,11 @@ def main():
         "variant",
         "seed",
         "task",
+        "graph_type",
+        "node_mode",
+        "lambda_cons",
+        "lambda_diff",
+        "lambda_decouple",
         "best_acc",
         "recall@1",
         "recall@5",
