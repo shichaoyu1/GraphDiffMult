@@ -2,7 +2,7 @@
 Pathology-guided graph-constrained shared/private model.
 
 The graph is used as a Laplacian consistency constraint over modality-level
-shared representations. It is not used for message passing.
+shared representations with a lightweight single-step message passing update.
 """
 
 import torch
@@ -187,6 +187,7 @@ class GliomaGraphDiffusionNet(nn.Module):
         self.use_anchor = use_anchor
         self.use_private = use_private
         self.use_diffusion = use_diffusion and use_private
+        self.graph_type = graph_type
 
         encoder_channels = z_slices * num_modalities if node_mode == 'regions' else z_slices
         self.encoders = nn.ModuleList([
@@ -203,6 +204,8 @@ class GliomaGraphDiffusionNet(nn.Module):
         ])
 
         self.graph_builder = SemanticGraphBuilder(shared_dim, graph_type=graph_type)
+        self.graph_norm = nn.LayerNorm(shared_dim)
+        self.private_to_shared = nn.Linear(private_dim, shared_dim)
         self.anchor_prototypes = nn.Parameter(torch.randn(num_classes, shared_dim) * 0.02)
 
         private_latent_dim = private_dim * self.num_nodes
@@ -270,31 +273,44 @@ class GliomaGraphDiffusionNet(nn.Module):
             images = images * modality_mask[:, :, None, None, None]
 
         if self.node_mode == 'regions':
-            raw_features, shared, private = self.encode_regions(images, region_masks)
+            raw_features, shared_raw, private = self.encode_regions(images, region_masks)
         else:
-            raw_features, shared, private = self.encode_modalities(images)
-        adjacency = self.graph_builder(shared)
-        shared_mean = shared.mean(dim=1)
+            raw_features, shared_raw, private = self.encode_modalities(images)
+        adjacency = self.graph_builder(shared_raw)
 
-        cons = graph_laplacian_consistency(shared, adjacency)
-        decouple = decouple_loss(shared, private) if self.use_private else shared.sum() * 0
+        if self.graph_type == 'no_graph':
+            shared_graph = shared_raw
+        else:
+            message = torch.matmul(adjacency, shared_raw)
+            shared_graph = self.graph_norm(shared_raw + message)
+
+        cons = graph_laplacian_consistency(shared_raw, adjacency)
+        decouple = decouple_loss(shared_raw, private) if self.use_private else shared_raw.sum() * 0
+
+        private_flat = private.reshape(private.shape[0], -1) if self.use_private else None
+        if self.use_private and self.use_diffusion:
+            shared_cond = shared_graph.mean(dim=1)
+            diff = self.diffusion.diffusion_loss(private_flat, shared_cond)
+            private_repr = self.diffusion.refine(private_flat, shared_cond)
+        elif self.use_private:
+            diff = shared_raw.sum() * 0
+            private_repr = private_flat
+        else:
+            diff = shared_raw.sum() * 0
+            private_repr = None
+
+        if private_repr is None:
+            shared = shared_graph
+        else:
+            private_nodes = private_repr.reshape(private.shape[0], self.num_nodes, self.private_dim)
+            shared = shared_graph + self.private_to_shared(private_nodes)
+        shared_mean = shared.mean(dim=1)
 
         if labels is not None and self.use_anchor:
             anchors = self.anchor_prototypes[labels]
             anchor = F.mse_loss(shared_mean, anchors)
         else:
-            anchor = shared.sum() * 0
-
-        private_flat = private.reshape(private.shape[0], -1)
-        if self.use_private and self.use_diffusion:
-            diff = self.diffusion.diffusion_loss(private_flat, shared_mean)
-            private_repr = self.diffusion.refine(private_flat, shared_mean)
-        elif self.use_private:
-            diff = shared.sum() * 0
-            private_repr = private_flat
-        else:
-            diff = shared.sum() * 0
-            private_repr = None
+            anchor = shared_raw.sum() * 0
 
         if private_repr is None:
             fused = shared_mean
@@ -316,6 +332,7 @@ class GliomaGraphDiffusionNet(nn.Module):
         if return_extras:
             output['extras'] = {
                 'raw_features': raw_features,
+                'shared_raw': shared_raw,
                 'shared': shared,
                 'private': private,
                 'private_repr': private_repr,

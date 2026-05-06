@@ -217,6 +217,23 @@ def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature
     return -(torch.logsumexp(masked_logits, dim=-1) - torch.logsumexp(logits, dim=-1)).mean()
 
 
+def anchor_center_loss(queries, target_ids, prototypes):
+    if queries.numel() == 0:
+        return prototypes.sum() * 0
+    queries = F.normalize(queries, dim=-1)
+    prototypes = F.normalize(prototypes, dim=-1)
+    losses = []
+    for row, ids in enumerate(target_ids):
+        if not ids:
+            continue
+        center = prototypes[ids].mean(dim=0, keepdim=True)
+        center = F.normalize(center, dim=-1).squeeze(0)
+        losses.append(1.0 - torch.sum(queries[row] * center))
+    if not losses:
+        return queries.sum() * 0
+    return torch.stack(losses).mean()
+
+
 def binary_auc(labels, scores):
     labels = np.asarray(labels, dtype=np.int64)
     scores = np.asarray(scores, dtype=np.float64)
@@ -366,15 +383,18 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             shared = output['extras']['shared']
             queries = shared.reshape(-1, shared.shape[-1])
             target_ids = build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args)
+            prototypes = bank()
             alignment_loss = multi_positive_contrastive_loss(
                 queries,
                 target_ids,
-                bank(),
+                prototypes,
                 temperature=args.temperature,
             )
+            anchor_loss = anchor_center_loss(queries, target_ids, prototypes)
             losses = output['losses']
             total = (
                 alignment_loss
+                + args.lambda_anchor * anchor_loss
                 + args.lambda_cons * losses['cons']
                 + args.lambda_decouple * losses['decouple']
                 + args.lambda_diff * losses['diff']
@@ -390,13 +410,14 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         totals['n'] += batch_size
         totals['total'] += float(total.detach().cpu()) * batch_size
         totals['alignment'] += float(alignment_loss.detach().cpu()) * batch_size
+        totals['anchor'] += float(anchor_loss.detach().cpu()) * batch_size
         for name in ['cons', 'decouple', 'diff', 'graph_energy']:
             totals[name] += float(losses[name].detach().cpu()) * batch_size
 
     n_samples = max(totals['n'], 1)
     return {
         name: totals[name] / n_samples
-        for name in ['total', 'alignment', 'cons', 'decouple', 'diff', 'graph_energy']
+        for name in ['total', 'alignment', 'anchor', 'cons', 'decouple', 'diff', 'graph_energy']
     }
 
 
@@ -610,6 +631,17 @@ def save_json(path, payload):
         json.dump(payload, file, indent=2, ensure_ascii=False)
 
 
+def save_patient_level_records(records, out_dir):
+    payload = {
+        'subject_ids': [record['subject_id'] for record in records['query_records']],
+        'node_names': [record['node_name'] for record in records['query_records']],
+        'query_targets': records['query_targets'],
+        'query_vectors': records['query_vectors'].tolist(),
+        'prototypes': records['prototypes'].tolist(),
+    }
+    save_json(os.path.join(out_dir, 'patient_level_records.json'), payload)
+
+
 def anchor_gallery(anchor_vocab, excluded_sources=None):
     excluded_sources = set(excluded_sources or [])
     return [idx for idx, anchor in enumerate(anchor_vocab) if anchor['source'] not in excluded_sources]
@@ -652,6 +684,7 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
         )
 
     save_json(os.path.join(out_dir, 'semantic_alignment_metrics.json'), metrics)
+    save_patient_level_records(records, out_dir)
     save_alignment_space_plot(records, anchor_vocab, out_dir)
     save_semantic_unit_graph(records, anchor_vocab, args, out_dir)
     return metrics
@@ -703,7 +736,7 @@ def main(args):
         splits['test'] = list(splits['val'] or splits['train'])
 
     anchor_vocab, key_to_id = build_anchor_vocab(
-        cases,
+        splits['train'],
         include_pathology=not args.exclude_pathology_anchors,
         include_molecular=not args.exclude_molecular_anchors,
         include_clinical=args.include_clinical_anchors,
@@ -776,7 +809,7 @@ def main(args):
 
         print(
             f"Epoch {epoch:03d}/{args.epochs} "
-            f"loss={train_losses['total']:.4f} align={train_losses['alignment']:.4f} "
+            f"loss={train_losses['total']:.4f} align={train_losses['alignment']:.4f} anchor={train_losses['anchor']:.4f} "
             f"val_mrr={val_metrics.get('mrr', float('nan')):.4f} "
             f"val_r@1={val_metrics.get('recall@1', float('nan')):.4f}"
         )
@@ -847,6 +880,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=3e-4)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     parser.add_argument('--temperature', type=float, default=0.07)
+    parser.add_argument('--lambda_anchor', type=float, default=0.05)
     parser.add_argument('--lambda_cons', type=float, default=0.05)
     parser.add_argument('--lambda_decouple', type=float, default=0.01)
     parser.add_argument('--lambda_diff', type=float, default=0.05)

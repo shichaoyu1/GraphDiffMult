@@ -5,7 +5,7 @@ set -euo pipefail
 # Round-2 semantic alignment scheduler
 #
 # Default goal:
-#   1) rerun the strongest/most informative variants with 3 seeds
+#   1) rerun the strongest/most informative variants with 5 seeds
 #   2) keep lambda sweeps opt-in, because they are more expensive
 #   3) keep IDH downstream sanity opt-in, because it is not the main claim
 ########################################
@@ -33,13 +33,14 @@ RUN_LAMBDA_SWEEP="${RUN_LAMBDA_SWEEP:-0}"
 RUN_IDH_SANITY="${RUN_IDH_SANITY:-0}"
 
 CORE_VARIANTS="${CORE_VARIANTS:-full clip no_graph no_anchor}"
-CORE_SEEDS="${CORE_SEEDS:-42 43 44}"
+CORE_SEEDS="${CORE_SEEDS:-42 43 44 45 46}"
 
 SWEEP_SEEDS="${SWEEP_SEEDS:-42}"
 LAMBDA_CONS_VALUES="${LAMBDA_CONS_VALUES:-0 0.005 0.01 0.02 0.05 0.1}"
 LAMBDA_DIFF_VALUES="${LAMBDA_DIFF_VALUES:-0 0.01 0.03 0.05 0.1}"
 BASE_LAMBDA_CONS="${BASE_LAMBDA_CONS:-0.05}"
 BASE_LAMBDA_DIFF="${BASE_LAMBDA_DIFF:-0.05}"
+BASE_LAMBDA_ANCHOR="${BASE_LAMBDA_ANCHOR:-0.05}"
 
 IDH_VARIANTS="${IDH_VARIANTS:-full graph shared_private}"
 IDH_SEEDS="${IDH_SEEDS:-42}"
@@ -125,25 +126,27 @@ append_manifest() {
   local name="$2"
   local variant="$3"
   local seed="$4"
-  local lambda_cons="$5"
-  local lambda_diff="$6"
-  local out_dir="$7"
-  echo "${group},${name},${variant},${seed},${lambda_cons},${lambda_diff},${out_dir}" >> "$MANIFEST_CSV"
+  local lambda_anchor="$5"
+  local lambda_cons="$6"
+  local lambda_diff="$7"
+  local out_dir="$8"
+  echo "${group},${name},${variant},${seed},${lambda_anchor},${lambda_cons},${lambda_diff},${out_dir}" >> "$MANIFEST_CSV"
 }
 
 run_semantic_job() {
   local group="$1"
   local variant="$2"
   local seed="$3"
-  local lambda_cons="$4"
-  local lambda_diff="$5"
-  local suffix="$6"
+  local lambda_anchor="$4"
+  local lambda_cons="$5"
+  local lambda_diff="$6"
+  local suffix="$7"
 
   local name="semantic_${variant}_${suffix}_s${seed}"
   local out_dir="output/${name}_${RUN_ID}"
   local log_path="logs/${name}_${RUN_ID}.log"
 
-  append_manifest "$group" "$name" "$variant" "$seed" "$lambda_cons" "$lambda_diff" "$out_dir"
+  append_manifest "$group" "$name" "$variant" "$seed" "$lambda_anchor" "$lambda_cons" "$lambda_diff" "$out_dir"
 
   local metadata_args=()
   if [[ -n "$METADATA_TSV" && -f "$METADATA_TSV" ]]; then
@@ -169,6 +172,7 @@ run_semantic_job() {
     --graph_top_k "$GRAPH_TOP_K"
     --seed "$seed"
     --graph_type learnable
+    --lambda_anchor "$lambda_anchor"
     --lambda_cons "$lambda_cons"
     --lambda_diff "$lambda_diff"
     --augment
@@ -187,7 +191,7 @@ run_idh_job() {
   local out_dir="output/${name}_${RUN_ID}"
   local log_path="logs/${name}_${RUN_ID}.log"
 
-  append_manifest "idh_sanity" "$name" "$variant" "$seed" "" "" "$out_dir"
+  append_manifest "idh_sanity" "$name" "$variant" "$seed" "" "" "" "$out_dir"
 
   local metadata_args=()
   if [[ -n "$METADATA_TSV" && -f "$METADATA_TSV" ]]; then
@@ -246,7 +250,7 @@ if [[ ! -d "$DATA_ROOT" ]]; then
   exit 1
 fi
 
-echo "group,name,variant,seed,lambda_cons,lambda_diff,out_dir" > "$MANIFEST_CSV"
+echo "group,name,variant,seed,lambda_anchor,lambda_cons,lambda_diff,out_dir" > "$MANIFEST_CSV"
 
 log "===== START RUN_ID=${RUN_ID} ====="
 log "DATA_ROOT=${DATA_ROOT}"
@@ -255,6 +259,7 @@ log "RUN_CORE=${RUN_CORE} CORE_VARIANTS=${CORE_VARIANTS} CORE_SEEDS=${CORE_SEEDS
 log "RUN_LAMBDA_SWEEP=${RUN_LAMBDA_SWEEP} SWEEP_SEEDS=${SWEEP_SEEDS}"
 log "RUN_IDH_SANITY=${RUN_IDH_SANITY} IDH_VARIANTS=${IDH_VARIANTS}"
 log "EPOCHS=${EPOCHS} BATCH_SIZE=${BATCH_SIZE} ROI_SIZE=${ROI_SIZE} Z_SLICES=${Z_SLICES}"
+log "BASE_LAMBDA_ANCHOR=${BASE_LAMBDA_ANCHOR} BASE_LAMBDA_CONS=${BASE_LAMBDA_CONS} BASE_LAMBDA_DIFF=${BASE_LAMBDA_DIFF}"
 
 bash utils/gpu_logger.sh "$GPU_LOG" "$GPU_LOG_INTERVAL" &
 GPU_LOGGER_PID=$!
@@ -264,7 +269,7 @@ if [[ "$RUN_CORE" == "1" ]]; then
   log "===== CORE VARIANTS ====="
   for seed in $CORE_SEEDS; do
     for variant in $CORE_VARIANTS; do
-      run_semantic_job "core" "$variant" "$seed" "$BASE_LAMBDA_CONS" "$BASE_LAMBDA_DIFF" "core"
+      run_semantic_job "core" "$variant" "$seed" "$BASE_LAMBDA_ANCHOR" "$BASE_LAMBDA_CONS" "$BASE_LAMBDA_DIFF" "core"
     done
   done
 fi
@@ -274,7 +279,7 @@ if [[ "$RUN_LAMBDA_SWEEP" == "1" ]]; then
   for seed in $SWEEP_SEEDS; do
     for lambda_cons in $LAMBDA_CONS_VALUES; do
       suffix="cons$(slug "$lambda_cons")_diff$(slug "$BASE_LAMBDA_DIFF")"
-      run_semantic_job "lambda_cons" "full" "$seed" "$lambda_cons" "$BASE_LAMBDA_DIFF" "$suffix"
+      run_semantic_job "lambda_cons" "full" "$seed" "$BASE_LAMBDA_ANCHOR" "$lambda_cons" "$BASE_LAMBDA_DIFF" "$suffix"
     done
   done
 
@@ -282,7 +287,7 @@ if [[ "$RUN_LAMBDA_SWEEP" == "1" ]]; then
   for seed in $SWEEP_SEEDS; do
     for lambda_diff in $LAMBDA_DIFF_VALUES; do
       suffix="cons$(slug "$BASE_LAMBDA_CONS")_diff$(slug "$lambda_diff")"
-      run_semantic_job "lambda_diff" "full" "$seed" "$BASE_LAMBDA_CONS" "$lambda_diff" "$suffix"
+      run_semantic_job "lambda_diff" "full" "$seed" "$BASE_LAMBDA_ANCHOR" "$BASE_LAMBDA_CONS" "$lambda_diff" "$suffix"
     done
   done
 fi
