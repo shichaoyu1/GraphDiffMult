@@ -9,6 +9,7 @@ import numpy as np
 
 
 METRIC_KEYS = [
+    "map",
     "recall@1",
     "recall@5",
     "recall@10",
@@ -41,7 +42,7 @@ def binary_auc(labels, scores):
     return float((pos_ranks - pos.sum() * (pos.sum() + 1) / 2) / (pos.sum() * neg.sum()))
 
 
-def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10)):
+def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10), subject_ids=None):
     query_vectors = np.asarray(query_vectors, dtype=np.float32)
     prototypes = np.asarray(prototypes, dtype=np.float32)
     if gallery_ids is None:
@@ -56,6 +57,7 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
 
     recalls = {k: [] for k in ks}
     reciprocal_ranks = []
+    average_precisions = []
     pos_scores = []
     neg_scores = []
     pos_dists = []
@@ -78,6 +80,14 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
         )
         if first_rank is not None:
             reciprocal_ranks.append(1.0 / first_rank)
+        precision_hits = []
+        hit_count = 0
+        for rank_idx, anchor_id in enumerate(ranked_anchor_ids, start=1):
+            if anchor_id in positives:
+                hit_count += 1
+                precision_hits.append(hit_count / rank_idx)
+        if precision_hits:
+            average_precisions.append(float(np.mean(precision_hits)))
 
         for col, anchor_id in enumerate(gallery_ids):
             score = float(scores[row, col])
@@ -93,6 +103,28 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
                 neg_dists.append(distance)
 
     metrics = {f"recall@{k}": float(np.mean(values)) if values else float("nan") for k, values in recalls.items()}
+    map_query = float(np.mean(average_precisions)) if average_precisions else float("nan")
+    metrics["map_query"] = map_query
+    if subject_ids is not None and len(subject_ids) == len(target_ids):
+        patient_ap = defaultdict(list)
+        for row, positives in enumerate(target_ids):
+            positives = set(positives).intersection(gallery_ids)
+            if not positives:
+                continue
+            ranking = np.argsort(-scores[row])
+            ranked_anchor_ids = [gallery_ids[idx] for idx in ranking]
+            precision_hits = []
+            hit_count = 0
+            for rank_idx, anchor_id in enumerate(ranked_anchor_ids, start=1):
+                if anchor_id in positives:
+                    hit_count += 1
+                    precision_hits.append(hit_count / rank_idx)
+            if precision_hits:
+                patient_ap[str(subject_ids[row])].append(float(np.mean(precision_hits)))
+        patient_means = [float(np.mean(values)) for values in patient_ap.values() if values]
+        metrics["map"] = float(np.mean(patient_means)) if patient_means else map_query
+    else:
+        metrics["map"] = map_query
     metrics["mrr"] = float(np.mean(reciprocal_ranks)) if reciprocal_ranks else float("nan")
     metrics["pair_auc"] = binary_auc(edge_labels, edge_scores)
     metrics["anchor_consistency"] = (
@@ -137,6 +169,7 @@ def load_run(run_dir):
         "query_vectors": query_vectors,
         "prototypes": prototypes,
         "query_targets": query_targets,
+        "subject_ids": subject_ids,
         "patient_to_indices": dict(patient_to_indices),
     }
 
@@ -146,7 +179,8 @@ def run_metrics_on_indices(run_data, indices):
         return {key: float("nan") for key in METRIC_KEYS}
     q = run_data["query_vectors"][indices]
     t = [run_data["query_targets"][idx] for idx in indices]
-    metrics = retrieval_metrics(q, t, run_data["prototypes"])
+    subject_ids = [run_data["subject_ids"][idx] for idx in indices]
+    metrics = retrieval_metrics(q, t, run_data["prototypes"], subject_ids=subject_ids)
     return {key: float(metrics.get(key, float("nan"))) for key in METRIC_KEYS}
 
 

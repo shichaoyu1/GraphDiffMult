@@ -5,6 +5,7 @@ from pathlib import Path
 
 
 SEMANTIC_KEYS = [
+    "map",
     "recall@1",
     "recall@5",
     "recall@10",
@@ -78,6 +79,7 @@ def run_fields(run_dir):
         fields["lambda_cons"] = config.get("lambda_cons", "")
         fields["lambda_diff"] = config.get("lambda_diff", "")
         fields["lambda_decouple"] = config.get("lambda_decouple", "")
+        fields["alignment_objective"] = config.get("alignment_objective", "")
 
     semantic_path = run_dir / "semantic_alignment_metrics.json"
     test_path = run_dir / "test_metrics.json"
@@ -89,6 +91,7 @@ def run_fields(run_dir):
             fields[key] = metrics.get(key)
         fields.update(flatten_nested("pathology_unavailable", metrics, SEMANTIC_KEYS))
         fields.update(flatten_nested("molecular_unavailable", metrics, SEMANTIC_KEYS))
+        fields["pathology_unavailable_map_drop"] = metrics.get("pathology_unavailable_map_drop")
         fields["case_count"] = metrics.get("case_count")
         fields["query_count"] = metrics.get("query_count")
         fields["anchor_count"] = metrics.get("anchor_count")
@@ -133,10 +136,12 @@ def main():
         "task",
         "graph_type",
         "node_mode",
+        "alignment_objective",
         "lambda_cons",
         "lambda_diff",
         "lambda_decouple",
         "best_acc",
+        "map",
         "recall@1",
         "recall@5",
         "recall@10",
@@ -145,6 +150,7 @@ def main():
         "edge_precision@25",
         "anchor_consistency",
         "positive_negative_distance_gap",
+        "pathology_unavailable_map_drop",
         "pathology_unavailable_mrr",
         "molecular_unavailable_mrr",
         "auc",

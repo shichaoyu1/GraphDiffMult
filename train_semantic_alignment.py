@@ -217,6 +217,72 @@ def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature
     return -(torch.logsumexp(masked_logits, dim=-1) - torch.logsumexp(logits, dim=-1)).mean()
 
 
+def medclip_multi_positive_loss(queries, target_ids, prototypes, ignore_ids_by_anchor, temperature=0.07):
+    if queries.numel() == 0:
+        return prototypes.sum() * 0
+    queries = F.normalize(queries, dim=-1)
+    prototypes = F.normalize(prototypes, dim=-1)
+    logits = queries @ prototypes.t() / temperature
+
+    positive_mask = torch.zeros_like(logits, dtype=torch.bool)
+    valid_mask = torch.ones_like(logits, dtype=torch.bool)
+    for row, ids in enumerate(target_ids):
+        if not ids:
+            continue
+        positive_mask[row, ids] = True
+        for anchor_id in ids:
+            for ignore_id in ignore_ids_by_anchor[anchor_id]:
+                valid_mask[row, ignore_id] = False
+        valid_mask[row, ids] = True
+    if not positive_mask.any():
+        return logits.sum() * 0
+
+    masked_pos_logits = logits.masked_fill(~positive_mask, -1e9)
+    masked_all_logits = logits.masked_fill(~valid_mask, -1e9)
+    return -(torch.logsumexp(masked_pos_logits, dim=-1) - torch.logsumexp(masked_all_logits, dim=-1)).mean()
+
+
+def dcca_alignment_loss(queries, target_ids, prototypes, reg=1e-3):
+    if queries.numel() == 0:
+        return prototypes.sum() * 0
+    queries = F.normalize(queries, dim=-1)
+    prototypes = F.normalize(prototypes, dim=-1)
+
+    x_rows = []
+    y_rows = []
+    for row, ids in enumerate(target_ids):
+        if not ids:
+            continue
+        x_rows.append(queries[row])
+        y_rows.append(prototypes[ids].mean(dim=0))
+    if len(x_rows) < 2:
+        return queries.sum() * 0
+
+    x = torch.stack(x_rows, dim=0)
+    y = torch.stack(y_rows, dim=0)
+    x = x - x.mean(dim=0, keepdim=True)
+    y = y - y.mean(dim=0, keepdim=True)
+    n = x.shape[0]
+    dim_x = x.shape[1]
+    dim_y = y.shape[1]
+    eye_x = torch.eye(dim_x, device=x.device, dtype=x.dtype)
+    eye_y = torch.eye(dim_y, device=y.device, dtype=y.dtype)
+
+    c_xx = (x.T @ x) / max(n - 1, 1) + reg * eye_x
+    c_yy = (y.T @ y) / max(n - 1, 1) + reg * eye_y
+    c_xx = 0.5 * (c_xx + c_xx.T)
+    c_yy = 0.5 * (c_yy + c_yy.T)
+    c_xy = (x.T @ y) / max(n - 1, 1)
+
+    eval_x, evec_x = torch.linalg.eigh(c_xx)
+    eval_y, evec_y = torch.linalg.eigh(c_yy)
+    invsqrt_x = evec_x @ torch.diag(torch.rsqrt(torch.clamp(eval_x, min=1e-6))) @ evec_x.T
+    invsqrt_y = evec_y @ torch.diag(torch.rsqrt(torch.clamp(eval_y, min=1e-6))) @ evec_y.T
+    t_mat = invsqrt_x @ c_xy @ invsqrt_y
+    corr = torch.linalg.svdvals(t_mat).sum()
+    return -(corr / float(min(dim_x, dim_y)))
+
+
 def anchor_center_loss(queries, target_ids, prototypes):
     if queries.numel() == 0:
         return prototypes.sum() * 0
@@ -234,6 +300,18 @@ def anchor_center_loss(queries, target_ids, prototypes):
     return torch.stack(losses).mean()
 
 
+def build_medclip_ignore_ids(anchor_vocab):
+    buckets = defaultdict(list)
+    for idx, anchor in enumerate(anchor_vocab):
+        key = (anchor.get('source', ''), anchor.get('field', ''))
+        buckets[key].append(idx)
+    ignore_ids = []
+    for anchor in anchor_vocab:
+        key = (anchor.get('source', ''), anchor.get('field', ''))
+        ignore_ids.append(buckets.get(key, []))
+    return ignore_ids
+
+
 def binary_auc(labels, scores):
     labels = np.asarray(labels, dtype=np.int64)
     scores = np.asarray(scores, dtype=np.float64)
@@ -248,7 +326,7 @@ def binary_auc(labels, scores):
     return float((pos_ranks - pos.sum() * (pos.sum() + 1) / 2) / (pos.sum() * neg.sum()))
 
 
-def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10)):
+def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10), subject_ids=None):
     query_vectors = np.asarray(query_vectors, dtype=np.float32)
     prototypes = np.asarray(prototypes, dtype=np.float32)
     if gallery_ids is None:
@@ -263,6 +341,7 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
 
     recalls = {k: [] for k in ks}
     reciprocal_ranks = []
+    average_precisions = []
     pos_scores = []
     neg_scores = []
     pos_dists = []
@@ -282,6 +361,14 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
         first_rank = next((rank + 1 for rank, anchor_id in enumerate(ranked_anchor_ids) if anchor_id in positives), None)
         if first_rank is not None:
             reciprocal_ranks.append(1.0 / first_rank)
+        precision_hits = []
+        hit_count = 0
+        for rank_idx, anchor_id in enumerate(ranked_anchor_ids, start=1):
+            if anchor_id in positives:
+                hit_count += 1
+                precision_hits.append(hit_count / rank_idx)
+        if precision_hits:
+            average_precisions.append(float(np.mean(precision_hits)))
 
         for col, anchor_id in enumerate(gallery_ids):
             score = float(scores[row, col])
@@ -297,6 +384,28 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, k
                 neg_dists.append(distance)
 
     metrics = {f'recall@{k}': float(np.mean(values)) if values else float('nan') for k, values in recalls.items()}
+    map_query = float(np.mean(average_precisions)) if average_precisions else float('nan')
+    metrics['map_query'] = map_query
+    if subject_ids is not None and len(subject_ids) == len(target_ids):
+        patient_ap = defaultdict(list)
+        for row, positives in enumerate(target_ids):
+            positives = set(positives).intersection(gallery_ids)
+            if not positives:
+                continue
+            ranking = np.argsort(-scores[row])
+            ranked_anchor_ids = [gallery_ids[idx] for idx in ranking]
+            precision_hits = []
+            hit_count = 0
+            for rank_idx, anchor_id in enumerate(ranked_anchor_ids, start=1):
+                if anchor_id in positives:
+                    hit_count += 1
+                    precision_hits.append(hit_count / rank_idx)
+            if precision_hits:
+                patient_ap[str(subject_ids[row])].append(float(np.mean(precision_hits)))
+        patient_means = [float(np.mean(values)) for values in patient_ap.values() if values]
+        metrics['map'] = float(np.mean(patient_means)) if patient_means else map_query
+    else:
+        metrics['map'] = map_query
     metrics['mrr'] = float(np.mean(reciprocal_ranks)) if reciprocal_ranks else float('nan')
     metrics['pair_auc'] = binary_auc(edge_labels, edge_scores)
     metrics['average_positive_similarity'] = float(np.mean(pos_scores)) if pos_scores else float('nan')
@@ -370,7 +479,7 @@ def graph_cons_scale(epoch, warmup_epochs):
     return min(1.0, float(epoch) / float(warmup_epochs))
 
 
-def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_id, epoch):
+def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_id, epoch, loss_context):
     training = optimizer is not None
     model.train(training)
     bank.train(training)
@@ -397,12 +506,42 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             queries = shared.reshape(-1, shared.shape[-1])
             target_ids = build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args)
             prototypes = bank()
-            alignment_loss = multi_positive_contrastive_loss(
-                queries,
-                target_ids,
-                prototypes,
-                temperature=args.temperature,
-            )
+            dcca_fallback = 0.0
+            if args.alignment_objective == 'medclip':
+                alignment_loss = medclip_multi_positive_loss(
+                    queries,
+                    target_ids,
+                    prototypes,
+                    ignore_ids_by_anchor=loss_context['medclip_ignore_ids'],
+                    temperature=args.temperature,
+                )
+            elif args.alignment_objective == 'dcca':
+                clip_loss = multi_positive_contrastive_loss(
+                    queries,
+                    target_ids,
+                    prototypes,
+                    temperature=args.temperature,
+                )
+                try:
+                    dcca_loss = dcca_alignment_loss(
+                        queries,
+                        target_ids,
+                        prototypes,
+                        reg=args.dcca_reg,
+                    )
+                    dcca_fallback = 0.0
+                    alignment_loss = dcca_loss + args.dcca_clip_weight * clip_loss
+                except RuntimeError:
+                    dcca_fallback = 1.0
+                    alignment_loss = clip_loss
+            else:
+                alignment_loss = multi_positive_contrastive_loss(
+                    queries,
+                    target_ids,
+                    prototypes,
+                    temperature=args.temperature,
+                )
+                dcca_fallback = 0.0
             anchor_loss = anchor_center_loss(queries, target_ids, prototypes)
             losses = output['losses']
             total = (
@@ -426,6 +565,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         totals['total'] += float(total.detach().cpu()) * batch_size
         totals['alignment'] += float(alignment_loss.detach().cpu()) * batch_size
         totals['anchor'] += float(anchor_loss.detach().cpu()) * batch_size
+        totals['dcca_fallback'] += float(dcca_fallback) * batch_size
         for name in ['cons', 'decouple', 'leak', 'diff', 'diff_norm', 'graph_energy']:
             totals[name] += float(losses[name].detach().cpu()) * batch_size
         totals['shared_norm'] += float(output['extras']['shared_norm'].detach().cpu()) * batch_size
@@ -445,6 +585,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             'diff',
             'diff_norm',
             'graph_energy',
+            'dcca_fallback',
             'shared_norm',
             'private_norm',
             'diffusion_residual_norm',
@@ -506,6 +647,7 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
     return {
         'query_vectors': np.asarray(query_vectors, dtype=np.float32),
         'query_targets': query_targets,
+        'query_subject_ids': [record['subject_id'] for record in query_records],
         'query_records': query_records,
         'prototypes': prototypes,
         'adjacency': adjacency,
@@ -690,7 +832,12 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
         anchor_vocab,
         max_cases=args.align_max_cases,
     )
-    metrics = retrieval_metrics(records['query_vectors'], records['query_targets'], records['prototypes'])
+    metrics = retrieval_metrics(
+        records['query_vectors'],
+        records['query_targets'],
+        records['prototypes'],
+        subject_ids=records['query_subject_ids'],
+    )
     metrics['case_count'] = records['case_count']
     metrics['query_count'] = int(len(records['query_vectors']))
     metrics['anchor_count'] = int(len(anchor_vocab))
@@ -702,8 +849,11 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
             records['query_targets'],
             records['prototypes'],
             gallery_ids=no_pathology_gallery,
+            subject_ids=records['query_subject_ids'],
         )
         metrics['pathology_unavailable'] = missing_pathology
+        if 'map' in metrics and 'map' in missing_pathology:
+            metrics['pathology_unavailable_map_drop'] = float(metrics['map'] - missing_pathology['map'])
 
     no_gene_gallery = anchor_gallery(anchor_vocab, excluded_sources={'Gene'})
     if no_gene_gallery:
@@ -712,6 +862,7 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
             records['query_targets'],
             records['prototypes'],
             gallery_ids=no_gene_gallery,
+            subject_ids=records['query_subject_ids'],
         )
 
     save_json(os.path.join(out_dir, 'semantic_alignment_metrics.json'), metrics)
@@ -728,6 +879,23 @@ def apply_variant(args):
         args.graph_type = 'no_graph'
         args.no_private = True
         args.no_diffusion = True
+        args.alignment_objective = 'clip'
+    elif args.variant == 'medclip_style':
+        args.graph_type = 'no_graph'
+        args.no_private = True
+        args.no_diffusion = True
+        args.alignment_objective = 'medclip'
+    elif args.variant == 'dcca':
+        args.graph_type = 'no_graph'
+        args.no_private = True
+        args.no_diffusion = True
+        args.alignment_objective = 'dcca'
+    elif args.variant in {'hgt', 'graph_shared_only'}:
+        args.graph_type = 'learnable'
+        args.no_private = True
+        args.no_diffusion = True
+        args.alignment_objective = 'clip'
+        args.variant = 'graph_shared_only'
     elif args.variant == 'no_anchor':
         args.exclude_pathology_anchors = True
     elif args.variant == 'graph_only':
@@ -777,6 +945,9 @@ def main(args):
 
     case_lookup = {case['subject_id']: case for case in cases}
     loaders = {split: make_loader(split_cases, args, split) for split, split_cases in splits.items()}
+    loss_context = {
+        'medclip_ignore_ids': build_medclip_ignore_ids(anchor_vocab),
+    }
 
     model = GliomaGraphDiffusionNet(
         num_classes=1,
@@ -811,7 +982,7 @@ def main(args):
     print(
         f'Variant={args.variant} node_mode={args.node_mode} graph={args.graph_type} '
         f'pathology_anchors={not args.exclude_pathology_anchors} molecular_anchors={not args.exclude_molecular_anchors} '
-        f'private={not args.no_private} diffusion={not args.no_diffusion}'
+        f'private={not args.no_private} diffusion={not args.no_diffusion} objective={args.alignment_objective}'
     )
     print(f'Anchor vocabulary ({len(anchor_vocab)}): {[anchor["label"] for anchor in anchor_vocab]}')
 
@@ -827,17 +998,24 @@ def main(args):
     best_path = os.path.join(args.out_dir, 'best_semantic_alignment.pt')
 
     for epoch in range(1, args.epochs + 1):
-        train_losses = run_epoch(model, bank, loaders['train'], optimizer, device, args, case_lookup, key_to_id, epoch)
-        val_losses = run_epoch(model, bank, loaders['val'], None, device, args, case_lookup, key_to_id, epoch)
+        train_losses = run_epoch(model, bank, loaders['train'], optimizer, device, args, case_lookup, key_to_id, epoch, loss_context)
+        val_losses = run_epoch(model, bank, loaders['val'], None, device, args, case_lookup, key_to_id, epoch, loss_context)
         val_records = collect_alignment_records(model, bank, loaders['val'], device, args, case_lookup, key_to_id, anchor_vocab)
-        val_metrics = retrieval_metrics(val_records['query_vectors'], val_records['query_targets'], val_records['prototypes'])
+        val_metrics = retrieval_metrics(
+            val_records['query_vectors'],
+            val_records['query_targets'],
+            val_records['prototypes'],
+            subject_ids=val_records['query_subject_ids'],
+        )
         scheduler.step()
 
         epoch_record = {'epoch': epoch, 'train': train_losses, 'val': {**val_losses, **val_metrics}}
         history.append(epoch_record)
         save_json(os.path.join(args.out_dir, 'history.json'), history)
 
-        score = val_metrics.get('mrr', float('nan'))
+        score = val_metrics.get('map', float('nan'))
+        if np.isnan(score):
+            score = val_metrics.get('mrr', float('nan'))
         if np.isnan(score):
             score = -val_losses['alignment']
         if score > best_score:
@@ -849,6 +1027,8 @@ def main(args):
             f"loss={train_losses['total']:.4f} align={train_losses['alignment']:.4f} anchor={train_losses['anchor']:.4f} "
             f"shared_norm={train_losses['shared_norm']:.4f} private_norm={train_losses['private_norm']:.4f} "
             f"diff_res_norm={train_losses['diffusion_residual_norm']:.4f} graphE={train_losses['graph_energy']:.4f} "
+            f"dcca_fb={train_losses['dcca_fallback']:.4f} "
+            f"val_mAP={val_metrics.get('map', float('nan')):.4f} "
             f"val_mrr={val_metrics.get('mrr', float('nan')):.4f} "
             f"val_r@1={val_metrics.get('recall@1', float('nan')):.4f} "
             f"val_pairAUC={val_metrics.get('pair_auc', float('nan')):.4f}"
@@ -872,7 +1052,8 @@ def main(args):
     )
     save_json(os.path.join(args.out_dir, 'test_metrics.json'), test_metrics)
     print(
-        f"Test semantic alignment: MRR={test_metrics.get('mrr', float('nan')):.4f} "
+        f"Test semantic alignment: mAP={test_metrics.get('map', float('nan')):.4f} "
+        f"MRR={test_metrics.get('mrr', float('nan')):.4f} "
         f"R@1={test_metrics.get('recall@1', float('nan')):.4f} "
         f"pairAUC={test_metrics.get('pair_auc', float('nan')):.4f}"
     )
@@ -886,7 +1067,7 @@ if __name__ == '__main__':
     )
     parser.add_argument('--data_root', type=str, required=True, help='UTSW-Glioma root directory')
     parser.add_argument('--metadata_tsv', type=str, default=None, help='UTSW metadata TSV path')
-    parser.add_argument('--variant', type=str, default='full', choices=['full', 'clip', 'no_anchor', 'graph_only', 'modality_vector', 'no_private', 'no_graph'])
+    parser.add_argument('--variant', type=str, default='full', choices=['full', 'clip', 'medclip_style', 'dcca', 'graph_shared_only', 'hgt', 'no_anchor', 'graph_only', 'modality_vector', 'no_private', 'no_graph'])
     parser.add_argument('--out_dir', type=str, default='output/semantic_alignment_experiment')
 
     parser.add_argument('--roi_size', type=int, default=96)
@@ -927,6 +1108,9 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=3e-4)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     parser.add_argument('--temperature', type=float, default=0.07)
+    parser.add_argument('--alignment_objective', type=str, default='clip', choices=['clip', 'medclip', 'dcca'])
+    parser.add_argument('--dcca_reg', type=float, default=1e-3)
+    parser.add_argument('--dcca_clip_weight', type=float, default=0.2)
     parser.add_argument('--lambda_anchor', type=float, default=0.05)
     parser.add_argument('--lambda_cons', type=float, default=0.05)
     parser.add_argument('--lambda_decouple', type=float, default=0.01)

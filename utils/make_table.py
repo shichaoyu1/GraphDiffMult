@@ -7,6 +7,7 @@ from pathlib import Path
 TABLE_COLUMNS = [
     ("variant", "Method"),
     ("seed", "Seed"),
+    ("map", "mAP"),
     ("recall@1", "R@1"),
     ("recall@5", "R@5"),
     ("mrr", "MRR"),
@@ -44,7 +45,7 @@ def main():
     parser.add_argument("csv_file")
     parser.add_argument("tex_file")
     parser.add_argument("--type", default="semantic_alignment")
-    parser.add_argument("--sort_metric", default="mrr")
+    parser.add_argument("--sort_metric", default="map")
     args = parser.parse_args()
 
     with open(args.csv_file, "r", encoding="utf-8", newline="") as file:

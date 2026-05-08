@@ -5,7 +5,7 @@ set -euo pipefail
 # Round-2 semantic alignment scheduler
 #
 # Default goal:
-#   1) rerun the strongest/most informative variants with 5 seeds
+#   1) run core semantic-alignment baselines + ablations with 3 default seeds
 #   2) keep lambda sweeps opt-in, because they are more expensive
 #   3) keep IDH downstream sanity opt-in, because it is not the main claim
 ########################################
@@ -32,8 +32,8 @@ RUN_CORE="${RUN_CORE:-1}"
 RUN_LAMBDA_SWEEP="${RUN_LAMBDA_SWEEP:-0}"
 RUN_IDH_SANITY="${RUN_IDH_SANITY:-0}"
 
-CORE_VARIANTS="${CORE_VARIANTS:-full clip no_graph no_anchor}"
-CORE_SEEDS="${CORE_SEEDS:-42 43 44 45 46}"
+CORE_VARIANTS="${CORE_VARIANTS:-full clip medclip_style dcca graph_shared_only no_graph no_anchor}"
+CORE_SEEDS="${CORE_SEEDS:-42 43 44}"
 
 SWEEP_SEEDS="${SWEEP_SEEDS:-42}"
 LAMBDA_CONS_VALUES="${LAMBDA_CONS_VALUES:-0 0.005 0.01 0.02 0.05 0.1}"
