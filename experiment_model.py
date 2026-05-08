@@ -173,6 +173,12 @@ class GliomaGraphDiffusionNet(nn.Module):
         private_dim: int = 128,
         graph_type: str = 'learnable',
         diffusion_T: int = 20,
+        graph_ema_momentum: float = 0.95,
+        graph_ema_blend: float = 0.5,
+        diffusion_init_alpha: float = 0.05,
+        shared_private_mix_init: float = 0.05,
+        classifier_private_scale_init: float = 0.05,
+        diffusion_max_ratio: float = 0.5,
         use_anchor: bool = True,
         use_private: bool = True,
         use_diffusion: bool = True,
@@ -188,6 +194,9 @@ class GliomaGraphDiffusionNet(nn.Module):
         self.use_private = use_private
         self.use_diffusion = use_diffusion and use_private
         self.graph_type = graph_type
+        self.graph_ema_momentum = graph_ema_momentum
+        self.graph_ema_blend = graph_ema_blend
+        self.diffusion_max_ratio = diffusion_max_ratio
 
         encoder_channels = z_slices * num_modalities if node_mode == 'regions' else z_slices
         self.encoders = nn.ModuleList([
@@ -206,6 +215,11 @@ class GliomaGraphDiffusionNet(nn.Module):
         self.graph_builder = SemanticGraphBuilder(shared_dim, graph_type=graph_type)
         self.graph_norm = nn.LayerNorm(shared_dim)
         self.private_to_shared = nn.Linear(private_dim, shared_dim)
+        self.diffusion_alpha = nn.Parameter(torch.tensor(float(diffusion_init_alpha)))
+        self.shared_private_mix = nn.Parameter(torch.tensor(float(shared_private_mix_init)))
+        self.classifier_private_scale = nn.Parameter(torch.tensor(float(classifier_private_scale_init)))
+        self.register_buffer('adj_ema', torch.zeros(self.num_nodes, self.num_nodes))
+        self.register_buffer('adj_ema_ready', torch.tensor(0, dtype=torch.uint8))
         self.anchor_prototypes = nn.Parameter(torch.randn(num_classes, shared_dim) * 0.02)
 
         private_latent_dim = private_dim * self.num_nodes
@@ -223,6 +237,21 @@ class GliomaGraphDiffusionNet(nn.Module):
             nn.SiLU(),
             nn.Linear(128, num_classes),
         )
+
+    def _smooth_adjacency(self, adjacency):
+        if self.graph_type == 'no_graph':
+            return adjacency
+        batch_mean = adjacency.mean(dim=0).detach()
+        if self.training:
+            if int(self.adj_ema_ready.item()) == 0:
+                self.adj_ema.copy_(batch_mean)
+                self.adj_ema_ready.fill_(1)
+            else:
+                self.adj_ema.mul_(self.graph_ema_momentum).add_(batch_mean * (1.0 - self.graph_ema_momentum))
+        if int(self.adj_ema_ready.item()) == 0:
+            return adjacency
+        ema = self.adj_ema.unsqueeze(0).expand_as(adjacency)
+        return (1.0 - self.graph_ema_blend) * adjacency + self.graph_ema_blend * ema
 
     def encode_modalities(self, images):
         features = []
@@ -268,7 +297,7 @@ class GliomaGraphDiffusionNet(nn.Module):
         )
         return features, shared, private
 
-    def forward(self, images, labels=None, modality_mask=None, region_masks=None, return_extras=False):
+    def forward(self, images, labels=None, modality_mask=None, region_masks=None, return_extras=False, freeze_graph=False):
         if modality_mask is not None:
             images = images * modality_mask[:, :, None, None, None]
 
@@ -276,7 +305,10 @@ class GliomaGraphDiffusionNet(nn.Module):
             raw_features, shared_raw, private = self.encode_regions(images, region_masks)
         else:
             raw_features, shared_raw, private = self.encode_modalities(images)
-        adjacency = self.graph_builder(shared_raw)
+        adjacency_raw = self.graph_builder(shared_raw)
+        adjacency = self._smooth_adjacency(adjacency_raw)
+        if freeze_graph and self.training:
+            adjacency = adjacency.detach()
 
         if self.graph_type == 'no_graph':
             shared_graph = shared_raw
@@ -285,25 +317,46 @@ class GliomaGraphDiffusionNet(nn.Module):
             shared_graph = self.graph_norm(shared_raw + message)
 
         cons = graph_laplacian_consistency(shared_raw, adjacency)
-        decouple = decouple_loss(shared_raw, private) if self.use_private else shared_raw.sum() * 0
 
         private_flat = private.reshape(private.shape[0], -1) if self.use_private else None
+        private_nodes_base = private
+        diffusion_residual_nodes = None
         if self.use_private and self.use_diffusion:
             shared_cond = shared_graph.mean(dim=1)
             diff = self.diffusion.diffusion_loss(private_flat, shared_cond)
-            private_repr = self.diffusion.refine(private_flat, shared_cond)
+            diffusion_target = self.diffusion.refine(private_flat, shared_cond)
+            diffusion_residual = diffusion_target - private_flat
+            alpha = torch.clamp(self.diffusion_alpha, min=0.0, max=0.3)
+            private_repr = private_flat + alpha * diffusion_residual
+            diffusion_residual_nodes = diffusion_residual.reshape(private.shape[0], self.num_nodes, self.private_dim)
         elif self.use_private:
             diff = shared_raw.sum() * 0
             private_repr = private_flat
+            diffusion_residual_nodes = torch.zeros_like(private)
         else:
             diff = shared_raw.sum() * 0
             private_repr = None
+            diffusion_residual_nodes = None
 
         if private_repr is None:
             shared = shared_graph
+            private_nodes_final = None
+            decouple = shared_raw.sum() * 0
+            leak = shared_raw.sum() * 0
+            diff_norm = shared_raw.sum() * 0
         else:
-            private_nodes = private_repr.reshape(private.shape[0], self.num_nodes, self.private_dim)
-            shared = shared_graph + self.private_to_shared(private_nodes)
+            private_nodes_final = private_repr.reshape(private.shape[0], self.num_nodes, self.private_dim)
+            if diffusion_residual_nodes is None:
+                diffusion_residual_nodes = torch.zeros_like(private_nodes_final)
+            shared_delta = self.private_to_shared(diffusion_residual_nodes)
+            mix = torch.clamp(self.shared_private_mix, min=0.0, max=0.3)
+            shared = shared_graph + mix * shared_delta
+            private_shared = self.private_to_shared(private_nodes_final)
+            decouple = decouple_loss(shared_raw, private_shared)
+            leak = decouple_loss(shared_graph, self.private_to_shared(diffusion_residual_nodes))
+            shared_norm = shared_graph.norm(dim=-1).mean()
+            residual_norm = diffusion_residual_nodes.norm(dim=-1).mean()
+            diff_norm = F.relu(residual_norm - self.diffusion_max_ratio * shared_norm)
         shared_mean = shared.mean(dim=1)
 
         if labels is not None and self.use_anchor:
@@ -315,7 +368,8 @@ class GliomaGraphDiffusionNet(nn.Module):
         if private_repr is None:
             fused = shared_mean
         else:
-            fused = torch.cat([shared_mean, private_repr], dim=-1)
+            cls_scale = torch.clamp(self.classifier_private_scale, min=0.0, max=0.3)
+            fused = torch.cat([shared_mean, cls_scale * private_repr], dim=-1)
         logits = self.classifier(fused)
 
         output = {
@@ -324,7 +378,9 @@ class GliomaGraphDiffusionNet(nn.Module):
                 'cons': cons,
                 'anchor': anchor,
                 'decouple': decouple,
+                'leak': leak,
                 'diff': diff,
+                'diff_norm': diff_norm,
                 'graph_energy': cons.detach(),
             },
         }
@@ -333,10 +389,24 @@ class GliomaGraphDiffusionNet(nn.Module):
             output['extras'] = {
                 'raw_features': raw_features,
                 'shared_raw': shared_raw,
+                'shared_graph': shared_graph,
                 'shared': shared,
-                'private': private,
+                'private': private_nodes_base,
+                'private_final_nodes': private_nodes_final,
+                'diffusion_residual_nodes': diffusion_residual_nodes,
                 'private_repr': private_repr,
                 'shared_mean': shared_mean,
+                'shared_norm': shared.norm(dim=-1).mean().detach(),
+                'private_norm': (
+                    private_nodes_final.norm(dim=-1).mean().detach()
+                    if private_nodes_final is not None
+                    else torch.zeros((), device=shared.device)
+                ),
+                'diffusion_residual_norm': (
+                    diffusion_residual_nodes.norm(dim=-1).mean().detach()
+                    if diffusion_residual_nodes is not None
+                    else torch.zeros((), device=shared.device)
+                ),
                 'adjacency': adjacency,
                 'fused': fused,
             }

@@ -364,12 +364,20 @@ def build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args):
     return target_ids
 
 
-def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_id):
+def graph_cons_scale(epoch, warmup_epochs):
+    if warmup_epochs <= 0:
+        return 1.0
+    return min(1.0, float(epoch) / float(warmup_epochs))
+
+
+def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_id, epoch):
     training = optimizer is not None
     model.train(training)
     bank.train(training)
     node_names = node_names_for_mode(args.node_mode)
     totals = Counter()
+    cons_scale = graph_cons_scale(epoch, args.graph_warmup_epochs)
+    freeze_graph = training and (epoch <= args.graph_warmup_epochs)
 
     for batch in loader:
         images = batch['images'].to(device)
@@ -379,7 +387,12 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         subject_ids = batch['subject_id']
 
         with torch.set_grad_enabled(training):
-            output = model(images, region_masks=region_masks, return_extras=True)
+            output = model(
+                images,
+                region_masks=region_masks,
+                return_extras=True,
+                freeze_graph=freeze_graph,
+            )
             shared = output['extras']['shared']
             queries = shared.reshape(-1, shared.shape[-1])
             target_ids = build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args)
@@ -395,9 +408,11 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             total = (
                 alignment_loss
                 + args.lambda_anchor * anchor_loss
-                + args.lambda_cons * losses['cons']
+                + args.lambda_cons * cons_scale * losses['cons']
                 + args.lambda_decouple * losses['decouple']
+                + args.lambda_leak * losses['leak']
                 + args.lambda_diff * losses['diff']
+                + args.lambda_diff_norm * losses['diff_norm']
             )
 
             if training:
@@ -411,13 +426,29 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         totals['total'] += float(total.detach().cpu()) * batch_size
         totals['alignment'] += float(alignment_loss.detach().cpu()) * batch_size
         totals['anchor'] += float(anchor_loss.detach().cpu()) * batch_size
-        for name in ['cons', 'decouple', 'diff', 'graph_energy']:
+        for name in ['cons', 'decouple', 'leak', 'diff', 'diff_norm', 'graph_energy']:
             totals[name] += float(losses[name].detach().cpu()) * batch_size
+        totals['shared_norm'] += float(output['extras']['shared_norm'].detach().cpu()) * batch_size
+        totals['private_norm'] += float(output['extras']['private_norm'].detach().cpu()) * batch_size
+        totals['diffusion_residual_norm'] += float(output['extras']['diffusion_residual_norm'].detach().cpu()) * batch_size
 
     n_samples = max(totals['n'], 1)
     return {
         name: totals[name] / n_samples
-        for name in ['total', 'alignment', 'anchor', 'cons', 'decouple', 'diff', 'graph_energy']
+        for name in [
+            'total',
+            'alignment',
+            'anchor',
+            'cons',
+            'decouple',
+            'leak',
+            'diff',
+            'diff_norm',
+            'graph_energy',
+            'shared_norm',
+            'private_norm',
+            'diffusion_residual_norm',
+        ]
     }
 
 
@@ -756,6 +787,12 @@ def main(args):
         private_dim=args.private_dim,
         graph_type=args.graph_type,
         diffusion_T=args.diffusion_T,
+        graph_ema_momentum=args.graph_ema_momentum,
+        graph_ema_blend=args.graph_ema_blend,
+        diffusion_init_alpha=args.diffusion_init_alpha,
+        shared_private_mix_init=args.shared_private_mix_init,
+        classifier_private_scale_init=args.classifier_private_scale_init,
+        diffusion_max_ratio=args.diffusion_max_ratio,
         use_anchor=False,
         use_private=not args.no_private,
         use_diffusion=not args.no_diffusion,
@@ -790,8 +827,8 @@ def main(args):
     best_path = os.path.join(args.out_dir, 'best_semantic_alignment.pt')
 
     for epoch in range(1, args.epochs + 1):
-        train_losses = run_epoch(model, bank, loaders['train'], optimizer, device, args, case_lookup, key_to_id)
-        val_losses = run_epoch(model, bank, loaders['val'], None, device, args, case_lookup, key_to_id)
+        train_losses = run_epoch(model, bank, loaders['train'], optimizer, device, args, case_lookup, key_to_id, epoch)
+        val_losses = run_epoch(model, bank, loaders['val'], None, device, args, case_lookup, key_to_id, epoch)
         val_records = collect_alignment_records(model, bank, loaders['val'], device, args, case_lookup, key_to_id, anchor_vocab)
         val_metrics = retrieval_metrics(val_records['query_vectors'], val_records['query_targets'], val_records['prototypes'])
         scheduler.step()
@@ -810,8 +847,11 @@ def main(args):
         print(
             f"Epoch {epoch:03d}/{args.epochs} "
             f"loss={train_losses['total']:.4f} align={train_losses['alignment']:.4f} anchor={train_losses['anchor']:.4f} "
+            f"shared_norm={train_losses['shared_norm']:.4f} private_norm={train_losses['private_norm']:.4f} "
+            f"diff_res_norm={train_losses['diffusion_residual_norm']:.4f} graphE={train_losses['graph_energy']:.4f} "
             f"val_mrr={val_metrics.get('mrr', float('nan')):.4f} "
-            f"val_r@1={val_metrics.get('recall@1', float('nan')):.4f}"
+            f"val_r@1={val_metrics.get('recall@1', float('nan')):.4f} "
+            f"val_pairAUC={val_metrics.get('pair_auc', float('nan')):.4f}"
         )
 
     if os.path.exists(best_path):
@@ -865,6 +905,13 @@ if __name__ == '__main__':
     parser.add_argument('--shared_dim', type=int, default=128)
     parser.add_argument('--private_dim', type=int, default=128)
     parser.add_argument('--diffusion_T', type=int, default=20)
+    parser.add_argument('--graph_warmup_epochs', type=int, default=5)
+    parser.add_argument('--graph_ema_momentum', type=float, default=0.95)
+    parser.add_argument('--graph_ema_blend', type=float, default=0.5)
+    parser.add_argument('--diffusion_init_alpha', type=float, default=0.05)
+    parser.add_argument('--shared_private_mix_init', type=float, default=0.05)
+    parser.add_argument('--classifier_private_scale_init', type=float, default=0.05)
+    parser.add_argument('--diffusion_max_ratio', type=float, default=0.5)
     parser.add_argument('--no_private', action='store_true')
     parser.add_argument('--no_diffusion', action='store_true')
 
@@ -883,7 +930,9 @@ if __name__ == '__main__':
     parser.add_argument('--lambda_anchor', type=float, default=0.05)
     parser.add_argument('--lambda_cons', type=float, default=0.05)
     parser.add_argument('--lambda_decouple', type=float, default=0.01)
+    parser.add_argument('--lambda_leak', type=float, default=0.02)
     parser.add_argument('--lambda_diff', type=float, default=0.05)
+    parser.add_argument('--lambda_diff_norm', type=float, default=0.02)
     parser.add_argument('--grad_clip', type=float, default=1.0)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--cpu', action='store_true')
