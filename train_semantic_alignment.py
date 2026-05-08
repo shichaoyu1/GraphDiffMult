@@ -329,6 +329,8 @@ def binary_auc(labels, scores):
 def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10), subject_ids=None):
     query_vectors = np.asarray(query_vectors, dtype=np.float32)
     prototypes = np.asarray(prototypes, dtype=np.float32)
+    query_vectors = np.nan_to_num(query_vectors, nan=0.0, posinf=0.0, neginf=0.0)
+    prototypes = np.nan_to_num(prototypes, nan=0.0, posinf=0.0, neginf=0.0)
     if gallery_ids is None:
         gallery_ids = list(range(len(prototypes)))
     gallery_ids = list(gallery_ids)
@@ -438,6 +440,10 @@ def bootstrap_ci(values, seed=42, n_bootstrap=1000):
     return [float(np.percentile(means, 2.5)), float(np.percentile(means, 97.5))]
 
 
+def sanitize_tensor(tensor, nan=0.0, posinf=0.0, neginf=0.0):
+    return torch.nan_to_num(tensor, nan=nan, posinf=posinf, neginf=neginf)
+
+
 def make_loader(cases, args, split_name):
     dataset = UTSWROIPatientDataset(
         cases,
@@ -502,10 +508,10 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                 return_extras=True,
                 freeze_graph=freeze_graph,
             )
-            shared = output['extras']['shared']
+            shared = sanitize_tensor(output['extras']['shared'])
             queries = shared.reshape(-1, shared.shape[-1])
             target_ids = build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args)
-            prototypes = bank()
+            prototypes = sanitize_tensor(bank())
             dcca_fallback = 0.0
             if args.alignment_objective == 'medclip':
                 alignment_loss = medclip_multi_positive_loss(
@@ -553,6 +559,11 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                 + args.lambda_diff * losses['diff']
                 + args.lambda_diff_norm * losses['diff_norm']
             )
+            if not torch.isfinite(total):
+                totals['nonfinite_batches'] += 1
+                if training:
+                    optimizer.zero_grad(set_to_none=True)
+                continue
 
             if training:
                 optimizer.zero_grad()
@@ -573,7 +584,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         totals['diffusion_residual_norm'] += float(output['extras']['diffusion_residual_norm'].detach().cpu()) * batch_size
 
     n_samples = max(totals['n'], 1)
-    return {
+    averaged = {
         name: totals[name] / n_samples
         for name in [
             'total',
@@ -591,6 +602,8 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             'diffusion_residual_norm',
         ]
     }
+    averaged['nonfinite_batches'] = float(totals.get('nonfinite_batches', 0.0))
+    return averaged
 
 
 def collect_alignment_records(model, bank, loader, device, args, case_lookup, key_to_id, anchor_vocab, max_cases=None):
@@ -602,6 +615,7 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
     query_records = []
     adjacency_mats = []
     seen_cases = 0
+    dropped_nonfinite_queries = 0
 
     with torch.no_grad():
         for batch in loader:
@@ -612,7 +626,9 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
             subject_ids = batch['subject_id']
             output = model(images, region_masks=region_masks, return_extras=True)
             shared = output['extras']['shared'].detach().cpu().numpy()
-            adjacency_mats.append(output['extras']['adjacency'].detach().cpu().numpy())
+            shared = np.nan_to_num(shared, nan=0.0, posinf=0.0, neginf=0.0)
+            adjacency_np = output['extras']['adjacency'].detach().cpu().numpy()
+            adjacency_mats.append(np.nan_to_num(adjacency_np, nan=0.0, posinf=0.0, neginf=0.0))
 
             for sample_idx, subject_id in enumerate(subject_ids):
                 if max_cases is not None and seen_cases >= max_cases:
@@ -630,7 +646,11 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
                     ids = [key_to_id[key] for key in keys if key in key_to_id]
                     if not ids:
                         continue
-                    query_vectors.append(shared[sample_idx, node_idx])
+                    vec = shared[sample_idx, node_idx]
+                    if not np.all(np.isfinite(vec)):
+                        dropped_nonfinite_queries += 1
+                        continue
+                    query_vectors.append(vec)
                     query_targets.append(ids)
                     query_records.append({
                         'subject_id': str(subject_id),
@@ -643,7 +663,10 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
                 break
 
     prototypes = bank().detach().cpu().numpy()
+    prototypes = np.nan_to_num(prototypes, nan=0.0, posinf=0.0, neginf=0.0)
     adjacency = np.concatenate(adjacency_mats, axis=0).mean(axis=0) if adjacency_mats else None
+    if adjacency is not None:
+        adjacency = np.nan_to_num(adjacency, nan=0.0, posinf=0.0, neginf=0.0)
     return {
         'query_vectors': np.asarray(query_vectors, dtype=np.float32),
         'query_targets': query_targets,
@@ -652,6 +675,7 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
         'prototypes': prototypes,
         'adjacency': adjacency,
         'case_count': seen_cases,
+        'dropped_nonfinite_queries': int(dropped_nonfinite_queries),
     }
 
 
@@ -833,8 +857,8 @@ def save_patient_level_records(records, out_dir):
         'subject_ids': [record['subject_id'] for record in records['query_records']],
         'node_names': [record['node_name'] for record in records['query_records']],
         'query_targets': records['query_targets'],
-        'query_vectors': records['query_vectors'].tolist(),
-        'prototypes': records['prototypes'].tolist(),
+        'query_vectors': np.nan_to_num(records['query_vectors'], nan=0.0, posinf=0.0, neginf=0.0).tolist(),
+        'prototypes': np.nan_to_num(records['prototypes'], nan=0.0, posinf=0.0, neginf=0.0).tolist(),
     }
     save_json(os.path.join(out_dir, 'patient_level_records.json'), payload)
 
@@ -865,6 +889,7 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
     metrics['case_count'] = records['case_count']
     metrics['query_count'] = int(len(records['query_vectors']))
     metrics['anchor_count'] = int(len(anchor_vocab))
+    metrics['dropped_nonfinite_queries'] = int(records.get('dropped_nonfinite_queries', 0))
 
     no_pathology_gallery = anchor_gallery(anchor_vocab, excluded_sources={'Pathology'})
     if no_pathology_gallery:

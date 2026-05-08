@@ -63,11 +63,16 @@ UTSW_METADATA_FILENAME = 'UTSW_Glioma_Metadata-2-1.tsv'
 
 def percentile_norm(vol: np.ndarray, p_lo: float = 1.0, p_hi: float = 99.0) -> np.ndarray:
     """Normalize non-zero foreground intensities to [0, 1]."""
+    vol = np.asarray(vol, dtype=np.float32)
+    vol = np.nan_to_num(vol, nan=0.0, posinf=0.0, neginf=0.0)
     fg = vol[vol > 0]
     if len(fg) == 0:
         return vol.astype(np.float32)
     lo, hi = np.percentile(fg, [p_lo, p_hi])
+    if not np.isfinite(lo) or not np.isfinite(hi):
+        return np.zeros_like(vol, dtype=np.float32)
     out = np.clip((vol - lo) / (hi - lo + 1e-8), 0, 1)
+    out = np.nan_to_num(out, nan=0.0, posinf=1.0, neginf=0.0)
     return out.astype(np.float32)
 
 
