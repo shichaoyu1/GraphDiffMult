@@ -662,9 +662,31 @@ def save_alignment_space_plot(records, anchor_vocab, out_dir, max_edges=160):
         return
 
     points = np.concatenate([query_vectors, prototypes], axis=0)
+    # Guard visualization against NaN/Inf and SVD convergence failures.
+    points = np.asarray(points, dtype=np.float32)
+    points = np.nan_to_num(points, nan=0.0, posinf=0.0, neginf=0.0)
     centered = points - points.mean(axis=0, keepdims=True)
-    _, _, vt = np.linalg.svd(centered, full_matrices=False)
-    coords = centered @ vt[:2].T if vt.shape[0] >= 2 else np.pad(centered @ vt[:1].T, ((0, 0), (0, 1)))
+    centered = np.nan_to_num(centered, nan=0.0, posinf=0.0, neginf=0.0)
+
+    def project_to_2d(matrix):
+        if matrix.ndim != 2 or matrix.shape[0] == 0:
+            return np.zeros((0, 2), dtype=np.float32)
+        if matrix.shape[1] == 0:
+            return np.zeros((matrix.shape[0], 2), dtype=np.float32)
+        try:
+            _, _, vt = np.linalg.svd(matrix, full_matrices=False)
+            if vt.shape[0] >= 2:
+                return matrix @ vt[:2].T
+            if vt.shape[0] == 1:
+                return np.pad(matrix @ vt[:1].T, ((0, 0), (0, 1)))
+        except np.linalg.LinAlgError:
+            pass
+        # Fallback: direct feature projection to avoid blocking eval pipeline.
+        if matrix.shape[1] >= 2:
+            return matrix[:, :2]
+        return np.pad(matrix[:, :1], ((0, 0), (0, 1)))
+
+    coords = project_to_2d(centered)
     query_coords = coords[:len(query_vectors)]
     anchor_coords = coords[len(query_vectors):]
 
@@ -752,8 +774,10 @@ def save_semantic_unit_graph(records, anchor_vocab, args, out_dir):
     if len(records['query_vectors']) == 0:
         return
 
-    query_norm = records['query_vectors'] / (np.linalg.norm(records['query_vectors'], axis=1, keepdims=True) + 1e-8)
-    proto_norm = records['prototypes'] / (np.linalg.norm(records['prototypes'], axis=1, keepdims=True) + 1e-8)
+    query_vec = np.nan_to_num(records['query_vectors'], nan=0.0, posinf=0.0, neginf=0.0)
+    proto_vec = np.nan_to_num(records['prototypes'], nan=0.0, posinf=0.0, neginf=0.0)
+    query_norm = query_vec / (np.linalg.norm(query_vec, axis=1, keepdims=True) + 1e-8)
+    proto_norm = proto_vec / (np.linalg.norm(proto_vec, axis=1, keepdims=True) + 1e-8)
     scores = query_norm @ proto_norm.T
     score_buckets = defaultdict(list)
     for query_idx, record in enumerate(records['query_records']):
