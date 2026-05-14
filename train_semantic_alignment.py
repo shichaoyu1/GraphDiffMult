@@ -10,6 +10,7 @@ derived from patient metadata.
 import argparse
 import json
 import os
+import sys
 from collections import Counter, defaultdict
 
 import matplotlib.pyplot as plt
@@ -19,15 +20,44 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
+WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if WORKSPACE_ROOT not in sys.path:
+    sys.path.insert(0, WORKSPACE_ROOT)
+
 from dataset import get_utsw_cases, load_utsw_metadata, find_utsw_metadata
 from experiment_dataset import UTSWROIPatientDataset, describe_cases, parse_utsw_label, stratified_split
 from experiment_model import GliomaGraphDiffusionNet
+try:
+    from glioma.anchors import semantic_anchors, target_anchor_keys
+    from glioma.config.paper_profiles import apply_paper_profile
+    from glioma.objectives import (
+        SemanticPrototypeBank,
+        dcca_alignment_loss,
+        medclip_multi_positive_loss,
+        multi_positive_contrastive_loss,
+    )
+except ModuleNotFoundError:
+    workspace_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+    if workspace_root not in sys.path:
+        sys.path.insert(0, workspace_root)
+    from glioma.anchors import semantic_anchors, target_anchor_keys
+    from glioma.config.paper_profiles import apply_paper_profile
+    from glioma.objectives import (
+        SemanticPrototypeBank,
+        dcca_alignment_loss,
+        medclip_multi_positive_loss,
+        multi_positive_contrastive_loss,
+    )
 from semantic_graph_visualize import (
     adjacency_to_laplacian,
     node_names_for_mode,
     plot_matrix,
     plot_semantic_graph,
 )
+
+
+DEFAULT_OUT_DIR = 'output/semantic_alignment_experiment'
+DEFAULT_VALIDATION_OUTPUT_ROOT = os.path.join(os.path.dirname(__file__), 'glioma', 'validation')
 
 
 PATHOLOGY_FIELDS = ('Tumor Grade', 'Tumor Type')
@@ -89,23 +119,6 @@ def make_anchor(field, value):
     }
 
 
-def semantic_anchors(metadata, include_pathology=True, include_molecular=True, include_clinical=False):
-    anchors = []
-    fields = []
-    if include_pathology:
-        fields.extend(PATHOLOGY_FIELDS)
-    if include_molecular:
-        fields.extend(MOLECULAR_FIELDS)
-    if include_clinical:
-        fields.extend(CLINICAL_FIELDS)
-
-    for field in fields:
-        value = clean_value(metadata.get(field))
-        if value and value.lower() not in {'na', 'n/a', 'nan', 'none', 'unknown'}:
-            anchors.append(make_anchor(field, value))
-    return anchors
-
-
 def grade_or_fallback_label(metadata):
     for task in ('grade', 'idh', 'mgmt', '1p19q'):
         try:
@@ -160,127 +173,6 @@ def build_anchor_vocab(cases, include_pathology=True, include_molecular=True, in
     ordered = [anchors[key] for key in sorted(anchors)]
     key_to_id = {anchor['key']: idx for idx, anchor in enumerate(ordered)}
     return ordered, key_to_id
-
-
-def target_anchor_keys(metadata, node_name, policy, include_pathology=True, include_molecular=True, include_clinical=False):
-    anchors = {
-        anchor['field']: anchor['key']
-        for anchor in semantic_anchors(
-            metadata,
-            include_pathology=include_pathology,
-            include_molecular=include_molecular,
-            include_clinical=include_clinical,
-        )
-    }
-    if policy == 'all_patient_anchors':
-        return list(anchors.values())
-
-    node = node_name.lower()
-    fields = []
-    if 'enhancing' in node or 't1ce' in node:
-        fields = ['Tumor Grade', 'MGMT', 'Tumor Type']
-    elif 'edema' in node or 'flair' in node or 't2' in node:
-        fields = ['IDH', 'Tumor Type', 'Tumor Grade']
-    elif 'necrotic' in node or 'core' in node or 't1' in node:
-        fields = ['Tumor Grade', '1p19Q CODEL', 'Tumor Type']
-    else:
-        fields = ['Tumor Grade', 'IDH', 'MGMT', '1p19Q CODEL', 'Tumor Type']
-
-    keys = [anchors[field] for field in fields if field in anchors]
-    return keys or list(anchors.values())
-
-
-class SemanticPrototypeBank(nn.Module):
-    def __init__(self, num_anchors, dim):
-        super().__init__()
-        self.prototypes = nn.Parameter(torch.randn(num_anchors, dim) * 0.02)
-
-    def forward(self):
-        return self.prototypes
-
-
-def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature=0.07):
-    if queries.numel() == 0:
-        return prototypes.sum() * 0
-    queries = F.normalize(queries, dim=-1)
-    prototypes = F.normalize(prototypes, dim=-1)
-    logits = queries @ prototypes.t() / temperature
-
-    mask = torch.zeros_like(logits, dtype=torch.bool)
-    for row, ids in enumerate(target_ids):
-        if ids:
-            mask[row, ids] = True
-    if not mask.any():
-        return logits.sum() * 0
-
-    masked_logits = logits.masked_fill(~mask, -1e9)
-    return -(torch.logsumexp(masked_logits, dim=-1) - torch.logsumexp(logits, dim=-1)).mean()
-
-
-def medclip_multi_positive_loss(queries, target_ids, prototypes, ignore_ids_by_anchor, temperature=0.07):
-    if queries.numel() == 0:
-        return prototypes.sum() * 0
-    queries = F.normalize(queries, dim=-1)
-    prototypes = F.normalize(prototypes, dim=-1)
-    logits = queries @ prototypes.t() / temperature
-
-    positive_mask = torch.zeros_like(logits, dtype=torch.bool)
-    valid_mask = torch.ones_like(logits, dtype=torch.bool)
-    for row, ids in enumerate(target_ids):
-        if not ids:
-            continue
-        positive_mask[row, ids] = True
-        for anchor_id in ids:
-            for ignore_id in ignore_ids_by_anchor[anchor_id]:
-                valid_mask[row, ignore_id] = False
-        valid_mask[row, ids] = True
-    if not positive_mask.any():
-        return logits.sum() * 0
-
-    masked_pos_logits = logits.masked_fill(~positive_mask, -1e9)
-    masked_all_logits = logits.masked_fill(~valid_mask, -1e9)
-    return -(torch.logsumexp(masked_pos_logits, dim=-1) - torch.logsumexp(masked_all_logits, dim=-1)).mean()
-
-
-def dcca_alignment_loss(queries, target_ids, prototypes, reg=1e-3):
-    if queries.numel() == 0:
-        return prototypes.sum() * 0
-    queries = F.normalize(queries, dim=-1)
-    prototypes = F.normalize(prototypes, dim=-1)
-
-    x_rows = []
-    y_rows = []
-    for row, ids in enumerate(target_ids):
-        if not ids:
-            continue
-        x_rows.append(queries[row])
-        y_rows.append(prototypes[ids].mean(dim=0))
-    if len(x_rows) < 2:
-        return queries.sum() * 0
-
-    x = torch.stack(x_rows, dim=0)
-    y = torch.stack(y_rows, dim=0)
-    x = x - x.mean(dim=0, keepdim=True)
-    y = y - y.mean(dim=0, keepdim=True)
-    n = x.shape[0]
-    dim_x = x.shape[1]
-    dim_y = y.shape[1]
-    eye_x = torch.eye(dim_x, device=x.device, dtype=x.dtype)
-    eye_y = torch.eye(dim_y, device=y.device, dtype=y.dtype)
-
-    c_xx = (x.T @ x) / max(n - 1, 1) + reg * eye_x
-    c_yy = (y.T @ y) / max(n - 1, 1) + reg * eye_y
-    c_xx = 0.5 * (c_xx + c_xx.T)
-    c_yy = 0.5 * (c_yy + c_yy.T)
-    c_xy = (x.T @ y) / max(n - 1, 1)
-
-    eval_x, evec_x = torch.linalg.eigh(c_xx)
-    eval_y, evec_y = torch.linalg.eigh(c_yy)
-    invsqrt_x = evec_x @ torch.diag(torch.rsqrt(torch.clamp(eval_x, min=1e-6))) @ evec_x.T
-    invsqrt_y = evec_y @ torch.diag(torch.rsqrt(torch.clamp(eval_y, min=1e-6))) @ evec_y.T
-    t_mat = invsqrt_x @ c_xy @ invsqrt_y
-    corr = torch.linalg.svdvals(t_mat).sum()
-    return -(corr / float(min(dim_x, dim_y)))
 
 
 def anchor_center_loss(queries, target_ids, prototypes):
@@ -558,6 +450,8 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                 + args.lambda_leak * losses['leak']
                 + args.lambda_diff * losses['diff']
                 + args.lambda_diff_norm * losses['diff_norm']
+                + args.lambda_gate_entropy * losses['gate_entropy']
+                + args.lambda_load_balance * losses['load_balance']
             )
             if not torch.isfinite(total):
                 totals['nonfinite_batches'] += 1
@@ -577,7 +471,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
         totals['alignment'] += float(alignment_loss.detach().cpu()) * batch_size
         totals['anchor'] += float(anchor_loss.detach().cpu()) * batch_size
         totals['dcca_fallback'] += float(dcca_fallback) * batch_size
-        for name in ['cons', 'decouple', 'leak', 'diff', 'diff_norm', 'graph_energy']:
+        for name in ['cons', 'decouple', 'leak', 'diff', 'diff_norm', 'gate_entropy', 'load_balance', 'graph_energy']:
             totals[name] += float(losses[name].detach().cpu()) * batch_size
         totals['shared_norm'] += float(output['extras']['shared_norm'].detach().cpu()) * batch_size
         totals['private_norm'] += float(output['extras']['private_norm'].detach().cpu()) * batch_size
@@ -595,6 +489,8 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
             'leak',
             'diff',
             'diff_norm',
+            'gate_entropy',
+            'load_balance',
             'graph_energy',
             'dcca_fallback',
             'shared_norm',
@@ -961,8 +857,19 @@ def apply_variant(args):
     return args
 
 
+def resolve_output_dir(args):
+    if args.paper_config == 'none':
+        return args.out_dir
+    out_dir = args.out_dir
+    if out_dir == DEFAULT_OUT_DIR:
+        out_dir = os.path.join(args.validation_output_root, args.paper_config)
+    return out_dir
+
+
 def main(args):
     args = apply_variant(args)
+    args = apply_paper_profile(args)
+    args.out_dir = resolve_output_dir(args)
     set_seed(args.seed)
     os.makedirs(args.out_dir, exist_ok=True)
     device = 'cuda' if torch.cuda.is_available() and not args.cpu else 'cpu'
@@ -1013,6 +920,7 @@ def main(args):
         shared_private_mix_init=args.shared_private_mix_init,
         classifier_private_scale_init=args.classifier_private_scale_init,
         diffusion_max_ratio=args.diffusion_max_ratio,
+        moe_module=args.moe_module,
         use_anchor=False,
         use_private=not args.no_private,
         use_diffusion=not args.no_diffusion,
@@ -1031,7 +939,8 @@ def main(args):
     print(
         f'Variant={args.variant} node_mode={args.node_mode} graph={args.graph_type} '
         f'pathology_anchors={not args.exclude_pathology_anchors} molecular_anchors={not args.exclude_molecular_anchors} '
-        f'private={not args.no_private} diffusion={not args.no_diffusion} objective={args.alignment_objective}'
+        f'private={not args.no_private} diffusion={not args.no_diffusion} objective={args.alignment_objective} '
+        f'moe={args.moe_module} paper={args.paper_config}'
     )
     print(f'Anchor vocabulary ({len(anchor_vocab)}): {[anchor["label"] for anchor in anchor_vocab]}')
 
@@ -1117,7 +1026,9 @@ if __name__ == '__main__':
     parser.add_argument('--data_root', type=str, required=True, help='UTSW-Glioma root directory')
     parser.add_argument('--metadata_tsv', type=str, default=None, help='UTSW metadata TSV path')
     parser.add_argument('--variant', type=str, default='full', choices=['full', 'clip', 'medclip_style', 'dcca', 'graph_shared_only', 'hgt', 'no_anchor', 'graph_only', 'modality_vector', 'no_private', 'no_graph'])
-    parser.add_argument('--out_dir', type=str, default='output/semantic_alignment_experiment')
+    parser.add_argument('--paper_config', type=str, default='none', choices=['none', 'paper1', 'paper2', 'paper3'])
+    parser.add_argument('--out_dir', type=str, default=DEFAULT_OUT_DIR)
+    parser.add_argument('--validation_output_root', type=str, default=DEFAULT_VALIDATION_OUTPUT_ROOT)
 
     parser.add_argument('--roi_size', type=int, default=96)
     parser.add_argument('--z_slices', type=int, default=7)
@@ -1142,6 +1053,7 @@ if __name__ == '__main__':
     parser.add_argument('--shared_private_mix_init', type=float, default=0.05)
     parser.add_argument('--classifier_private_scale_init', type=float, default=0.05)
     parser.add_argument('--diffusion_max_ratio', type=float, default=0.5)
+    parser.add_argument('--moe_module', type=str, default='none', choices=['none', 'semantic_moe', 'graph_moe', 'diffusion_moe'])
     parser.add_argument('--no_private', action='store_true')
     parser.add_argument('--no_diffusion', action='store_true')
 
@@ -1166,6 +1078,8 @@ if __name__ == '__main__':
     parser.add_argument('--lambda_leak', type=float, default=0.02)
     parser.add_argument('--lambda_diff', type=float, default=0.05)
     parser.add_argument('--lambda_diff_norm', type=float, default=0.02)
+    parser.add_argument('--lambda_gate_entropy', type=float, default=0.0)
+    parser.add_argument('--lambda_load_balance', type=float, default=0.0)
     parser.add_argument('--grad_clip', type=float, default=1.0)
     parser.add_argument('--seed', type=int, default=42)
     parser.add_argument('--cpu', action='store_true')

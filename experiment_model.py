@@ -8,6 +8,24 @@ shared representations with a lightweight single-step message passing update.
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import os
+import sys
+
+WORKSPACE_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+if WORKSPACE_ROOT not in sys.path:
+    sys.path.insert(0, WORKSPACE_ROOT)
+
+try:
+    from glioma.modules.diffusion import LatentPrivateDiffusion
+    from glioma.modules.graph import SemanticGraphBuilder, graph_laplacian_consistency
+    from glioma.modules.moe import AnchorExpert, DiffusionExpert, GraphExpert, RegionExpert, SemanticMoEGate
+except ModuleNotFoundError:
+    workspace_root = WORKSPACE_ROOT
+    if workspace_root not in sys.path:
+        sys.path.insert(0, workspace_root)
+    from glioma.modules.diffusion import LatentPrivateDiffusion
+    from glioma.modules.graph import SemanticGraphBuilder, graph_laplacian_consistency
+    from glioma.modules.moe import AnchorExpert, DiffusionExpert, GraphExpert, RegionExpert, SemanticMoEGate
 
 
 class ROI2DEncoder(nn.Module):
@@ -39,125 +57,10 @@ class ROI2DEncoder(nn.Module):
         return self.net(x)
 
 
-class SemanticGraphBuilder(nn.Module):
-    def __init__(self, shared_dim: int, graph_type: str = 'learnable', tau: float = 0.2):
-        super().__init__()
-        self.graph_type = graph_type
-        self.tau = tau
-        self.edge_mlp = nn.Sequential(
-            nn.Linear(shared_dim * 4, shared_dim),
-            nn.SiLU(),
-            nn.Linear(shared_dim, 1),
-        )
-
-    def _mask_self(self, scores):
-        n_nodes = scores.shape[1]
-        eye = torch.eye(n_nodes, dtype=torch.bool, device=scores.device).unsqueeze(0)
-        return scores.masked_fill(eye, -1e9)
-
-    def forward(self, shared):
-        batch_size, n_nodes, dim = shared.shape
-        device = shared.device
-
-        if self.graph_type == 'no_graph':
-            return torch.zeros(batch_size, n_nodes, n_nodes, device=device)
-
-        if self.graph_type == 'fixed':
-            adjacency = torch.ones(batch_size, n_nodes, n_nodes, device=device)
-            adjacency = adjacency - torch.eye(n_nodes, device=device).unsqueeze(0)
-            return adjacency / max(n_nodes - 1, 1)
-
-        if self.graph_type == 'random':
-            scores = torch.rand(batch_size, n_nodes, n_nodes, device=device)
-            return F.softmax(self._mask_self(scores), dim=-1)
-
-        if self.graph_type == 'similarity':
-            normalized = F.normalize(shared, dim=-1)
-            scores = torch.matmul(normalized, normalized.transpose(1, 2)) / self.tau
-            return F.softmax(self._mask_self(scores), dim=-1)
-
-        if self.graph_type == 'learnable':
-            source = shared.unsqueeze(2).expand(-1, -1, n_nodes, -1)
-            target = shared.unsqueeze(1).expand(-1, n_nodes, -1, -1)
-            pair = torch.cat([source, target, (source - target).abs(), source * target], dim=-1)
-            scores = self.edge_mlp(pair).squeeze(-1)
-            return F.softmax(self._mask_self(scores), dim=-1)
-
-        raise ValueError(f'Unsupported graph_type: {self.graph_type}')
-
-
-def graph_laplacian_consistency(shared, adjacency):
-    if adjacency.abs().sum() == 0:
-        return shared.sum() * 0
-    adjacency_sym = 0.5 * (adjacency + adjacency.transpose(1, 2))
-    diff = shared.unsqueeze(2) - shared.unsqueeze(1)
-    energy = 0.5 * adjacency_sym.unsqueeze(-1) * diff.pow(2)
-    return energy.sum(dim=(1, 2, 3)).mean()
-
-
 def decouple_loss(shared, private):
     shared = F.normalize(shared, dim=-1)
     private = F.normalize(private, dim=-1)
     return (shared * private).sum(dim=-1).pow(2).mean()
-
-
-class SinusoidalTimeEmbedding(nn.Module):
-    def __init__(self, dim: int):
-        super().__init__()
-        self.dim = dim
-
-    def forward(self, t):
-        half = self.dim // 2
-        scale = torch.log(torch.tensor(10000.0, device=t.device)) / max(half - 1, 1)
-        freqs = torch.exp(torch.arange(half, device=t.device) * -scale)
-        args = t[:, None] * freqs[None, :]
-        emb = torch.cat([args.sin(), args.cos()], dim=-1)
-        if emb.shape[-1] < self.dim:
-            emb = F.pad(emb, (0, self.dim - emb.shape[-1]))
-        return emb
-
-
-class LatentPrivateDiffusion(nn.Module):
-    def __init__(self, latent_dim: int, cond_dim: int, T: int = 20, time_dim: int = 32):
-        super().__init__()
-        self.T = T
-        self.time_embed = SinusoidalTimeEmbedding(time_dim)
-        self.denoiser = nn.Sequential(
-            nn.Linear(latent_dim + cond_dim + time_dim, 512),
-            nn.SiLU(),
-            nn.Linear(512, 512),
-            nn.SiLU(),
-            nn.Linear(512, latent_dim),
-        )
-        betas = torch.linspace(1e-4, 0.02, T)
-        self.register_buffer('alpha_bar', torch.cumprod(1.0 - betas, dim=0))
-
-    def q_sample(self, z0, t, noise=None):
-        if noise is None:
-            noise = torch.randn_like(z0)
-        alpha_bar = self.alpha_bar[t].unsqueeze(-1)
-        zt = alpha_bar.sqrt() * z0 + (1 - alpha_bar).sqrt() * noise
-        return zt, noise
-
-    def predict_noise(self, zt, t, cond):
-        t_emb = self.time_embed(t.float())
-        return self.denoiser(torch.cat([zt, cond, t_emb], dim=-1))
-
-    def diffusion_loss(self, z0, cond):
-        batch_size = z0.shape[0]
-        t = torch.randint(0, self.T, (batch_size,), device=z0.device)
-        zt, noise = self.q_sample(z0, t)
-        pred = self.predict_noise(zt, t, cond)
-        return F.mse_loss(pred, noise)
-
-    def refine(self, z0, cond, t_value=None):
-        if t_value is None:
-            t_value = max(1, self.T // 2)
-        t = torch.full((z0.shape[0],), min(t_value, self.T - 1), device=z0.device, dtype=torch.long)
-        zt, _ = self.q_sample(z0, t)
-        pred = self.predict_noise(zt, t, cond)
-        alpha_bar = self.alpha_bar[t].unsqueeze(-1)
-        return (zt - (1 - alpha_bar).sqrt() * pred) / (alpha_bar.sqrt() + 1e-8)
 
 
 class GliomaGraphDiffusionNet(nn.Module):
@@ -179,6 +82,7 @@ class GliomaGraphDiffusionNet(nn.Module):
         shared_private_mix_init: float = 0.05,
         classifier_private_scale_init: float = 0.05,
         diffusion_max_ratio: float = 0.5,
+        moe_module: str = 'none',
         use_anchor: bool = True,
         use_private: bool = True,
         use_diffusion: bool = True,
@@ -197,6 +101,8 @@ class GliomaGraphDiffusionNet(nn.Module):
         self.graph_ema_momentum = graph_ema_momentum
         self.graph_ema_blend = graph_ema_blend
         self.diffusion_max_ratio = diffusion_max_ratio
+        self.moe_module = moe_module
+        self.use_moe = moe_module in {'semantic_moe', 'graph_moe', 'diffusion_moe'}
 
         encoder_channels = z_slices * num_modalities if node_mode == 'regions' else z_slices
         self.encoders = nn.ModuleList([
@@ -237,6 +143,26 @@ class GliomaGraphDiffusionNet(nn.Module):
             nn.SiLU(),
             nn.Linear(128, num_classes),
         )
+
+        if self.use_moe:
+            if self.moe_module == 'graph_moe':
+                self.moe_expert_order = ['anchor', 'region', 'graph']
+            elif self.moe_module == 'diffusion_moe':
+                self.moe_expert_order = ['anchor', 'region', 'diffusion']
+            else:
+                self.moe_expert_order = ['anchor', 'region', 'graph', 'diffusion']
+            self.semantic_moe_gate = SemanticMoEGate(shared_dim, num_experts=len(self.moe_expert_order), hidden_dim=shared_dim)
+            self.anchor_expert = AnchorExpert(shared_dim)
+            self.region_expert = RegionExpert(shared_dim)
+            self.graph_expert = GraphExpert(shared_dim)
+            self.diffusion_expert = DiffusionExpert(shared_dim)
+        else:
+            self.moe_expert_order = []
+            self.semantic_moe_gate = None
+            self.anchor_expert = None
+            self.region_expert = None
+            self.graph_expert = None
+            self.diffusion_expert = None
 
     def _smooth_adjacency(self, adjacency):
         if self.graph_type == 'no_graph':
@@ -358,6 +284,29 @@ class GliomaGraphDiffusionNet(nn.Module):
             residual_norm = diffusion_residual_nodes.norm(dim=-1).mean()
             diff_norm = F.relu(residual_norm - self.diffusion_max_ratio * shared_norm)
         shared_mean = shared.mean(dim=1)
+        gate_entropy = shared_raw.sum() * 0
+        load_balance = shared_raw.sum() * 0
+        moe_gate = None
+
+        if self.use_moe:
+            anchor_ctx = shared_mean
+            region_ctx = shared_raw.mean(dim=1)
+            graph_ctx = shared_graph.mean(dim=1)
+            if private_repr is None:
+                diffusion_ctx = torch.zeros_like(shared_mean)
+            else:
+                diffusion_ctx = self.private_to_shared(private_nodes_final.mean(dim=1))
+            expert_bank = {
+                'anchor': self.anchor_expert(anchor_ctx),
+                'region': self.region_expert(region_ctx),
+                'graph': self.graph_expert(graph_ctx),
+                'diffusion': self.diffusion_expert(diffusion_ctx),
+            }
+            expert_outputs = torch.stack([expert_bank[name] for name in self.moe_expert_order], dim=1)
+            moe_gate = self.semantic_moe_gate(shared_mean)
+            shared_mean = torch.sum(moe_gate.unsqueeze(-1) * expert_outputs, dim=1)
+            gate_entropy = self.semantic_moe_gate.gate_entropy(moe_gate)
+            load_balance = self.semantic_moe_gate.load_balance(moe_gate)
 
         if labels is not None and self.use_anchor:
             anchors = self.anchor_prototypes[labels]
@@ -381,6 +330,8 @@ class GliomaGraphDiffusionNet(nn.Module):
                 'leak': leak,
                 'diff': diff,
                 'diff_norm': diff_norm,
+                'gate_entropy': gate_entropy,
+                'load_balance': load_balance,
                 'graph_energy': cons.detach(),
             },
         }
@@ -409,6 +360,7 @@ class GliomaGraphDiffusionNet(nn.Module):
                 ),
                 'adjacency': adjacency,
                 'fused': fused,
+                'moe_gate': moe_gate,
             }
 
         return output
