@@ -28,7 +28,17 @@ GRAPH_TOP_K="${GRAPH_TOP_K:-3}"
 # For stress-test scale control without changing run_all_pro.sh internals:
 # extra args are appended by run_all_pro.sh
 MAX_CASES="${MAX_CASES:-180}"
-SEMANTIC_EXTRA_ARGS="${SEMANTIC_EXTRA_ARGS:---max_cases ${MAX_CASES}}"
+ALLOW_IMAGING_PROXY_ANCHORS="${ALLOW_IMAGING_PROXY_ANCHORS:-1}"
+SEMANTIC_EXTRA_ARGS="${SEMANTIC_EXTRA_ARGS:-}"
+AUTO_SEMANTIC_EXTRA_ARGS="--max_cases ${MAX_CASES}"
+if [[ "$ALLOW_IMAGING_PROXY_ANCHORS" == "1" ]]; then
+  AUTO_SEMANTIC_EXTRA_ARGS="${AUTO_SEMANTIC_EXTRA_ARGS} --allow_imaging_proxy_anchors"
+fi
+if [[ -z "$SEMANTIC_EXTRA_ARGS" ]]; then
+  SEMANTIC_EXTRA_ARGS="$AUTO_SEMANTIC_EXTRA_ARGS"
+elif [[ "$ALLOW_IMAGING_PROXY_ANCHORS" == "1" && "$SEMANTIC_EXTRA_ARGS" != *"--allow_imaging_proxy_anchors"* ]]; then
+  SEMANTIC_EXTRA_ARGS="${SEMANTIC_EXTRA_ARGS} --allow_imaging_proxy_anchors"
+fi
 
 BASE_LAMBDA_ANCHOR="${BASE_LAMBDA_ANCHOR:-0.05}"
 BASE_LAMBDA_CONS="${BASE_LAMBDA_CONS:-0.05}"
@@ -94,13 +104,14 @@ log "CORE_SEEDS=${CORE_SEEDS}"
 log "EPOCHS=${EPOCHS}, MAX_CASES=${MAX_CASES}, ALIGN_MAX_CASES=${ALIGN_MAX_CASES}"
 
 # Preflight: make sure current dataset+metadata can form semantic cases and anchors.
-export DATA_ROOT METADATA_TSV PYTHON_BIN INCLUDE_NO_ANCHOR
+export DATA_ROOT METADATA_TSV PYTHON_BIN INCLUDE_NO_ANCHOR ALLOW_IMAGING_PROXY_ANCHORS
 "$PYTHON_BIN" - <<'PY'
 import os
 from train_semantic_alignment import discover_semantic_cases, stratified_split, build_anchor_vocab
 
 data_root = os.environ["DATA_ROOT"]
 metadata_tsv = os.environ.get("METADATA_TSV") or None
+allow_proxy = os.environ.get("ALLOW_IMAGING_PROXY_ANCHORS", "1") == "1"
 
 cases = discover_semantic_cases(
     data_root,
@@ -108,6 +119,7 @@ cases = discover_semantic_cases(
     max_cases=64,
     seed=42,
     include_clinical=False,
+    allow_imaging_proxy_anchors=allow_proxy,
 )
 if len(cases) < 2:
     raise SystemExit(

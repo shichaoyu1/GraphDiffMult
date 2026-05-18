@@ -19,7 +19,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from dataset import get_utsw_cases, load_utsw_metadata, find_utsw_metadata
+from dataset import get_utsw_cases, load_utsw_metadata, find_utsw_metadata, find_segmentation_file
 from experiment_dataset import UTSWROIPatientDataset, describe_cases, parse_utsw_label, stratified_split
 from experiment_model import GliomaGraphDiffusionNet
 from semantic_graph_visualize import (
@@ -256,12 +256,59 @@ def grade_or_fallback_label(metadata):
     return 0
 
 
-def discover_semantic_cases(root_dir, metadata_tsv=None, max_cases=None, seed=42, include_clinical=False):
+def build_imaging_proxy_metadata(case):
+    """
+    Build weak proxy anchors from BraTS segmentation when pathology/molecular
+    metadata are unavailable. This is intended for external stress tests only.
+    """
+    patient_dir = case.get('patient_dir')
+    if not patient_dir:
+        return {}
+    try:
+        import nibabel as nib
+        seg_path = find_segmentation_file(patient_dir, image_shape=None)
+        seg = nib.load(seg_path).get_fdata(dtype=np.float32)
+    except Exception:
+        return {}
+
+    tumor = seg > 0
+    tumor_vox = int(tumor.sum())
+    if tumor_vox <= 0:
+        return {}
+    n1 = int((seg == 1).sum())  # necrotic / non-enhancing core
+    n2 = int((seg == 2).sum())  # edema
+    n4 = int((seg == 4).sum())  # enhancing tumor
+    et_ratio = n4 / max(tumor_vox, 1)
+    ed_ratio = n2 / max(tumor_vox, 1)
+    core_ratio = n1 / max(tumor_vox, 1)
+
+    return {
+        # Keep original field names so downstream anchor pipeline works unchanged.
+        'Tumor Type': 'BraTS-imaging-proxy',
+        'Tumor Grade': 'high-grade-proxy' if et_ratio >= 0.15 else 'low-grade-proxy',
+        'IDH': 'mutant-proxy' if ed_ratio >= 0.45 else 'wildtype-proxy',
+        'MGMT': 'methylated-proxy' if core_ratio >= 0.30 else 'unmethylated-proxy',
+        '1p19Q CODEL': 'co-deleted-proxy' if tumor_vox < 50000 else 'non co-deleted-proxy',
+    }
+
+
+def discover_semantic_cases(
+    root_dir,
+    metadata_tsv=None,
+    max_cases=None,
+    seed=42,
+    include_clinical=False,
+    allow_imaging_proxy_anchors=False,
+):
     metadata_path = metadata_tsv or find_utsw_metadata(root_dir)
     metadata = load_utsw_metadata(metadata_path) if metadata_path else {}
     cases = []
     for case in get_utsw_cases(root_dir, metadata_tsv=metadata_path):
-        info = metadata.get(case['subject_id'], case.get('metadata', {}))
+        info = dict(metadata.get(case['subject_id'], case.get('metadata', {})) or {})
+        if allow_imaging_proxy_anchors:
+            has_core_fields = any(clean_value(info.get(field)) for field in (PATHOLOGY_FIELDS + MOLECULAR_FIELDS))
+            if not has_core_fields:
+                info.update(build_imaging_proxy_metadata(case))
         anchors = semantic_anchors(info, include_clinical=include_clinical)
         if not anchors:
             continue
@@ -1006,6 +1053,7 @@ def main(args):
         max_cases=args.max_cases,
         seed=args.seed,
         include_clinical=args.include_clinical_anchors,
+        allow_imaging_proxy_anchors=args.allow_imaging_proxy_anchors,
     )
     if len(cases) < 2:
         raise ValueError(f'Need at least 2 semantic cases; found {len(cases)}')
@@ -1187,6 +1235,7 @@ if __name__ == '__main__':
     parser.add_argument('--exclude_pathology_anchors', action='store_true')
     parser.add_argument('--exclude_molecular_anchors', action='store_true')
     parser.add_argument('--include_clinical_anchors', action='store_true')
+    parser.add_argument('--allow_imaging_proxy_anchors', action='store_true')
     parser.add_argument('--align_max_cases', type=int, default=50)
     parser.add_argument('--graph_top_k', type=int, default=3)
 
