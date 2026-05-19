@@ -23,48 +23,98 @@ MODALITY_CANDIDATES = {
     't1': [
         'brain_t1.nii.gz',
         'brain_t1.nii',
+        'brain_T1.nii.gz',
+        'brain_T1.nii',
         'brain_t1_ants.nii.gz',
         'brain_t1_ants.nii',
+        'brain_T1_ants.nii.gz',
+        'brain_T1_ants.nii',
         '*_t1.nii.gz',
         '*_t1.nii',
         '*-t1.nii.gz',
         '*-t1.nii',
+        '*_T1.nii.gz',
+        '*_T1.nii',
+        '*-T1.nii.gz',
+        '*-T1.nii',
     ],
     'flair': [
         'brain_flair.nii.gz',
         'brain_flair.nii',
+        'brain_FLAIR.nii.gz',
+        'brain_FLAIR.nii',
         'brain_fl_ants.nii.gz',
         'brain_fl_ants.nii',
+        'brain_FL_ants.nii.gz',
+        'brain_FL_ants.nii',
         '*_flair.nii.gz',
         '*_flair.nii',
         '*-flair.nii.gz',
         '*-flair.nii',
+        '*_FLAIR.nii.gz',
+        '*_FLAIR.nii',
+        '*-FLAIR.nii.gz',
+        '*-FLAIR.nii',
         '*_fl_*.nii.gz',
         '*_fl_*.nii',
+        '*_FL_*.nii.gz',
+        '*_FL_*.nii',
     ],
     't1ce': [
         'brain_t1ce.nii.gz',
         'brain_t1ce.nii',
+        'brain_T1ce.nii.gz',
+        'brain_T1ce.nii',
+        'brain_T1c.nii.gz',
+        'brain_T1c.nii',
         'brain_t1ce_ants.nii.gz',
         'brain_t1ce_ants.nii',
+        'brain_T1ce_ants.nii.gz',
+        'brain_T1ce_ants.nii',
+        'brain_T1c_ants.nii.gz',
+        'brain_T1c_ants.nii',
         '*_t1ce.nii.gz',
         '*_t1ce.nii',
         '*-t1ce.nii.gz',
         '*-t1ce.nii',
+        '*_T1ce.nii.gz',
+        '*_T1ce.nii',
+        '*-T1ce.nii.gz',
+        '*-T1ce.nii',
+        '*_t1c.nii.gz',
+        '*_t1c.nii',
+        '*-t1c.nii.gz',
+        '*-t1c.nii',
+        '*_T1c.nii.gz',
+        '*_T1c.nii',
+        '*-T1c.nii.gz',
+        '*-T1c.nii',
         '*_t1gd.nii.gz',
         '*_t1gd.nii',
         '*-t1gd.nii.gz',
         '*-t1gd.nii',
+        '*_T1gd.nii.gz',
+        '*_T1gd.nii',
+        '*-T1gd.nii.gz',
+        '*-T1gd.nii',
     ],
     't2': [
         'brain_t2.nii.gz',
         'brain_t2.nii',
+        'brain_T2.nii.gz',
+        'brain_T2.nii',
         'brain_t2_ants.nii.gz',
         'brain_t2_ants.nii',
+        'brain_T2_ants.nii.gz',
+        'brain_T2_ants.nii',
         '*_t2.nii.gz',
         '*_t2.nii',
         '*-t2.nii.gz',
         '*-t2.nii',
+        '*_T2.nii.gz',
+        '*_T2.nii',
+        '*-T2.nii.gz',
+        '*-T2.nii',
     ],
 }
 
@@ -103,9 +153,15 @@ def percentile_norm(vol: np.ndarray, p_lo: float = 1.0, p_hi: float = 99.0) -> n
 
 def _glob_candidates(folder: str, patterns: list) -> list:
     hits = []
+    seen = set()
     for pattern in patterns:
-        hits.extend(glob.glob(os.path.join(folder, pattern)))
-    return sorted(set(hits))
+        # Keep pattern-priority order; avoid global sort that can reorder
+        # tumor masks behind generic brain masks.
+        for path in glob.glob(os.path.join(folder, pattern)):
+            if path not in seen:
+                hits.append(path)
+                seen.add(path)
+    return hits
 
 
 def _prefer_shape_match(paths: list, shape: tuple = None) -> str:
@@ -150,7 +206,16 @@ def find_segmentation_file(folder: str, image_shape: tuple = None) -> str:
     hits = _glob_candidates(folder, SEGMENTATION_CANDIDATES)
     if not hits:
         raise FileNotFoundError(f"Cannot find a segmentation file under folder={folder}")
-    return _prefer_shape_match(hits, image_shape)
+    shape_hits = hits
+    if image_shape is not None:
+        shape_hits = [_prefer_shape_match(hits, image_shape)]
+    # Prefer tumor-like segmentation names over generic brain masks.
+    for keyword in ('tumor', 'lesion', 'rtumor', 'fets'):
+        for path in shape_hits:
+            base = os.path.basename(path).lower()
+            if keyword in base:
+                return path
+    return shape_hits[0]
 
 
 def resolve_patient_dir(path: str, patient_id: str = None) -> str:
