@@ -1,5 +1,7 @@
 # UTSW-Glioma 图约束扩散实验入口
 
+2026-10-09 更新：评审修订后的 PASA v2 服务器运行请使用 `SERVER_RUN.md` 与 `tools/run_pasa_server.py`。以下旧调度脚本、指标和实验示例用于历史参考，不作为新版确认实验配置。
+
 本项目现在保留三条路线：
 
 - `train.py`：原始 BraTS/UTSW 单病例 patch 演示，用于可视化和快速检查数据兼容性。

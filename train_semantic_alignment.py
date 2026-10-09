@@ -10,6 +10,7 @@ derived from patient metadata.
 import argparse
 import json
 import os
+import hashlib
 from collections import Counter, defaultdict
 
 import matplotlib.pyplot as plt
@@ -22,6 +23,9 @@ from torch.utils.data import DataLoader
 from dataset import get_utsw_cases, load_utsw_metadata, find_utsw_metadata, find_segmentation_file
 from experiment_dataset import UTSWROIPatientDataset, describe_cases, parse_utsw_label, stratified_split
 from experiment_model import GliomaGraphDiffusionNet
+from semantic_evaluation import (
+    PROTOCOL_VERSION, retrieval_metrics, supervision_from_keys, validate_patient_splits,
+)
 from semantic_graph_visualize import (
     adjacency_to_laplacian,
     node_names_for_mode,
@@ -30,7 +34,7 @@ from semantic_graph_visualize import (
 )
 
 
-DEFAULT_OUT_DIR = 'output/semantic_alignment_experiment'
+DEFAULT_OUT_DIR = 'output/semantic_alignment_experiment_v2'
 DEFAULT_VALIDATION_OUTPUT_ROOT = os.path.join(os.path.dirname(__file__), 'glioma', 'validation')
 
 
@@ -144,24 +148,23 @@ def target_anchor_keys(metadata, node_name, policy, include_pathology=True, incl
         fields = ['Tumor Grade', 'IDH', 'MGMT', '1p19Q CODEL', 'Tumor Type']
 
     keys = [anchors[field] for field in fields if field in anchors]
-    return keys or list(anchors.values())
+    return keys
 
 
 def apply_paper_profile(args):
     # Keep default behavior stable; optional profiles are lightweight presets.
     if args.paper_config == 'paper1':
-        args.variant = 'full'
-        args.alignment_objective = 'clip'
+        pass
     elif args.paper_config == 'paper2':
-        args.variant = 'full'
-        args.alignment_objective = 'medclip'
+        if args.alignment_objective == 'clip':
+            args.alignment_objective = 'medclip'
     elif args.paper_config == 'paper3':
-        args.variant = 'graph_shared_only'
-        args.alignment_objective = 'clip'
+        if args.variant == 'full':
+            args.variant = 'graph_shared_only'
     return args
 
 
-def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature=0.07):
+def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature=0.07, valid_ids=None):
     if queries.numel() == 0:
         return prototypes.sum() * 0
     queries = F.normalize(queries, dim=-1)
@@ -172,14 +175,20 @@ def multi_positive_contrastive_loss(queries, target_ids, prototypes, temperature
     for row, ids in enumerate(target_ids):
         if ids:
             mask[row, ids] = True
-    if not mask.any():
+    valid_rows = mask.any(dim=-1)
+    if not valid_rows.any():
         return logits.sum() * 0
+    valid_mask = torch.ones_like(mask) if valid_ids is None else torch.zeros_like(mask)
+    if valid_ids is not None:
+        for row, ids in enumerate(valid_ids):
+            valid_mask[row, ids] = True
+    valid_mask |= mask
+    masked_logits = logits.masked_fill(~mask, float('-inf'))[valid_rows]
+    denominator = logits.masked_fill(~valid_mask, float('-inf'))[valid_rows]
+    return -(torch.logsumexp(masked_logits, dim=-1) - torch.logsumexp(denominator, dim=-1)).mean()
 
-    masked_logits = logits.masked_fill(~mask, -1e9)
-    return -(torch.logsumexp(masked_logits, dim=-1) - torch.logsumexp(logits, dim=-1)).mean()
 
-
-def medclip_multi_positive_loss(queries, target_ids, prototypes, ignore_ids_by_anchor, temperature=0.07):
+def medclip_multi_positive_loss(queries, target_ids, prototypes, ignore_ids_by_anchor, temperature=0.07, valid_ids=None):
     if queries.numel() == 0:
         return prototypes.sum() * 0
     queries = F.normalize(queries, dim=-1)
@@ -187,21 +196,41 @@ def medclip_multi_positive_loss(queries, target_ids, prototypes, ignore_ids_by_a
     logits = queries @ prototypes.t() / temperature
 
     positive_mask = torch.zeros_like(logits, dtype=torch.bool)
-    valid_mask = torch.ones_like(logits, dtype=torch.bool)
+    valid_mask = torch.ones_like(logits, dtype=torch.bool) if valid_ids is None else torch.zeros_like(logits, dtype=torch.bool)
+    if valid_ids is not None:
+        for row, ids in enumerate(valid_ids):
+            valid_mask[row, ids] = True
     for row, ids in enumerate(target_ids):
         if not ids:
             continue
         positive_mask[row, ids] = True
-        for anchor_id in ids:
-            for ignore_id in ignore_ids_by_anchor[anchor_id]:
-                valid_mask[row, ignore_id] = False
+        if valid_ids is None:
+            # Legacy label-similarity heuristic; explicit v2 masks retain confirmed negatives.
+            for anchor_id in ids:
+                for ignore_id in ignore_ids_by_anchor[anchor_id]:
+                    valid_mask[row, ignore_id] = False
         valid_mask[row, ids] = True
-    if not positive_mask.any():
+    valid_rows = positive_mask.any(dim=-1)
+    if not valid_rows.any():
         return logits.sum() * 0
 
-    masked_pos_logits = logits.masked_fill(~positive_mask, -1e9)
-    masked_all_logits = logits.masked_fill(~valid_mask, -1e9)
+    masked_pos_logits = logits.masked_fill(~positive_mask, float('-inf'))[valid_rows]
+    masked_all_logits = logits.masked_fill(~valid_mask, float('-inf'))[valid_rows]
     return -(torch.logsumexp(masked_pos_logits, dim=-1) - torch.logsumexp(masked_all_logits, dim=-1)).mean()
+
+
+def masked_multilabel_loss(queries, target_ids, prototypes, valid_ids, temperature=0.07):
+    logits = F.normalize(queries, dim=-1) @ F.normalize(prototypes, dim=-1).t() / temperature
+    labels = torch.zeros_like(logits)
+    known = torch.zeros_like(logits, dtype=torch.bool)
+    for row, (positives, candidates) in enumerate(zip(target_ids, valid_ids)):
+        labels[row, positives] = 1
+        known[row, candidates] = True
+    if not known.any():
+        return logits.sum() * 0
+    losses = F.binary_cross_entropy_with_logits(logits, labels, reduction='none')
+    per_row = (losses * known).sum(dim=-1) / known.sum(dim=-1).clamp_min(1)
+    return per_row[known.any(dim=-1)].mean()
 
 
 def dcca_alignment_loss(queries, target_ids, prototypes, reg=1e-3):
@@ -305,15 +334,20 @@ def discover_semantic_cases(
     cases = []
     for case in get_utsw_cases(root_dir, metadata_tsv=metadata_path):
         info = dict(metadata.get(case['subject_id'], case.get('metadata', {})) or {})
+        provenance = 'structured_patient_metadata'
         if allow_imaging_proxy_anchors:
             has_core_fields = any(clean_value(info.get(field)) for field in (PATHOLOGY_FIELDS + MOLECULAR_FIELDS))
             if not has_core_fields:
-                info.update(build_imaging_proxy_metadata(case))
+                proxy = build_imaging_proxy_metadata(case)
+                info.update(proxy)
+                if proxy:
+                    provenance = 'segmentation_derived_imaging_proxy'
         anchors = semantic_anchors(info, include_clinical=include_clinical)
         if not anchors:
             continue
         case = dict(case)
         case['metadata'] = info
+        case['anchor_provenance'] = provenance
         case['label'] = grade_or_fallback_label(info)
         cases.append(case)
 
@@ -391,7 +425,7 @@ def binary_auc(labels, scores):
     return float((pos_ranks - pos.sum() * (pos.sum() + 1) / 2) / (pos.sum() * neg.sum()))
 
 
-def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10), subject_ids=None):
+def legacy_retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None, ks=(1, 5, 10), subject_ids=None):
     query_vectors = np.asarray(query_vectors, dtype=np.float32)
     prototypes = np.asarray(prototypes, dtype=np.float32)
     query_vectors = np.nan_to_num(query_vectors, nan=0.0, posinf=0.0, neginf=0.0)
@@ -544,6 +578,34 @@ def build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args):
     return target_ids
 
 
+def build_query_supervisions(subject_ids, node_names, case_lookup, key_to_id, anchor_vocab, args):
+    specs = []
+    for subject_id in subject_ids:
+        metadata = case_lookup[str(subject_id)]['metadata']
+        for node_name in node_names:
+            keys = target_anchor_keys(metadata, node_name, args.target_policy,
+                                      include_pathology=not args.exclude_pathology_anchors,
+                                      include_molecular=not args.exclude_molecular_anchors,
+                                      include_clinical=args.include_clinical_anchors)
+            specs.append(supervision_from_keys(keys, anchor_vocab, key_to_id))
+    return specs
+
+
+def evaluation_specs(metadata, anchor_vocab, key_to_id, args):
+    # The primary endpoint is shared molecular retrieval, independent of training ablations.
+    fields = MOLECULAR_FIELDS if args.evaluation_fields == 'molecular' else PATHOLOGY_FIELDS + MOLECULAR_FIELDS
+    by_field = {anchor['field']: anchor['key'] for anchor in semantic_anchors(metadata)}
+    return [(field, supervision_from_keys([by_field[field]] if field in by_field else [], anchor_vocab, key_to_id))
+            for field in fields]
+
+
+def score_records(records, gallery_ids=None):
+    return retrieval_metrics(records['query_vectors'], records['query_targets'], records['prototypes'],
+                             gallery_ids=gallery_ids, subject_ids=records['query_subject_ids'],
+                             valid_ids=records['query_valid_ids'], positive_counts=records['query_positive_counts'],
+                             field_names=records['query_fields'])
+
+
 def graph_cons_scale(epoch, warmup_epochs):
     if warmup_epochs <= 0:
         return 1.0
@@ -554,7 +616,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
     training = optimizer is not None
     model.train(training)
     bank.train(training)
-    node_names = node_names_for_mode(args.node_mode)
+    node_names = ['PatientGlobal'] if args.query_mode == 'global' else node_names_for_mode(args.node_mode)
     totals = Counter()
     cons_scale = graph_cons_scale(epoch, args.graph_warmup_epochs)
     freeze_graph = training and (epoch <= args.graph_warmup_epochs)
@@ -574,17 +636,32 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                 freeze_graph=freeze_graph,
             )
             shared = sanitize_tensor(output['extras']['shared'])
+            if args.query_mode == 'global':
+                shared = shared.mean(dim=1, keepdim=True)
             queries = shared.reshape(-1, shared.shape[-1])
-            target_ids = build_query_targets(subject_ids, node_names, case_lookup, key_to_id, args)
+            specs = build_query_supervisions(subject_ids, node_names, case_lookup, key_to_id,
+                                             loss_context['anchor_vocab'], args)
+            target_ids = [spec['positive_ids'] for spec in specs]
+            valid_ids = [spec['valid_ids'] for spec in specs]
             prototypes = sanitize_tensor(bank())
             dcca_fallback = 0.0
-            if args.alignment_objective == 'medclip':
+            if args.alignment_objective == 'multilabel':
+                alignment_loss = masked_multilabel_loss(queries, target_ids, prototypes, valid_ids,
+                                                       temperature=args.temperature)
+            elif args.alignment_objective == 'single_positive':
+                selected = [[ids[torch.randint(len(ids), ()).item()]] if ids else [] for ids in target_ids]
+                selected_valid = [[idx for idx in candidates if idx not in set(all_pos) or idx in chosen]
+                                  for candidates, all_pos, chosen in zip(valid_ids, target_ids, selected)]
+                alignment_loss = multi_positive_contrastive_loss(queries, selected, prototypes,
+                                                                 temperature=args.temperature, valid_ids=selected_valid)
+            elif args.alignment_objective == 'medclip':
                 alignment_loss = medclip_multi_positive_loss(
                     queries,
                     target_ids,
                     prototypes,
                     ignore_ids_by_anchor=loss_context['medclip_ignore_ids'],
                     temperature=args.temperature,
+                    valid_ids=valid_ids,
                 )
             elif args.alignment_objective == 'dcca':
                 clip_loss = multi_positive_contrastive_loss(
@@ -592,6 +669,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                     target_ids,
                     prototypes,
                     temperature=args.temperature,
+                    valid_ids=valid_ids,
                 )
                 try:
                     dcca_loss = dcca_alignment_loss(
@@ -611,6 +689,7 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
                     target_ids,
                     prototypes,
                     temperature=args.temperature,
+                    valid_ids=valid_ids,
                 )
                 dcca_fallback = 0.0
             anchor_loss = anchor_center_loss(queries, target_ids, prototypes)
@@ -678,9 +757,12 @@ def run_epoch(model, bank, loader, optimizer, device, args, case_lookup, key_to_
 def collect_alignment_records(model, bank, loader, device, args, case_lookup, key_to_id, anchor_vocab, max_cases=None):
     model.eval()
     bank.eval()
-    node_names = node_names_for_mode(args.node_mode)
+    node_names = ['PatientGlobal'] if args.query_mode == 'global' else node_names_for_mode(args.node_mode)
     query_vectors = []
     query_targets = []
+    query_valid_ids = []
+    query_positive_counts = []
+    query_fields = []
     query_records = []
     adjacency_mats = []
     seen_cases = 0
@@ -695,7 +777,8 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
             subject_ids = batch['subject_id']
             output = model(images, region_masks=region_masks, return_extras=True)
             shared = output['extras']['shared'].detach().cpu().numpy()
-            shared = np.nan_to_num(shared, nan=0.0, posinf=0.0, neginf=0.0)
+            if args.query_mode == 'global':
+                shared = shared.mean(axis=1, keepdims=True)
             adjacency_np = output['extras']['adjacency'].detach().cpu().numpy()
             adjacency_mats.append(np.nan_to_num(adjacency_np, nan=0.0, posinf=0.0, neginf=0.0))
 
@@ -704,41 +787,39 @@ def collect_alignment_records(model, bank, loader, device, args, case_lookup, ke
                     break
                 metadata = case_lookup[str(subject_id)]['metadata']
                 for node_idx, node_name in enumerate(node_names):
-                    keys = target_anchor_keys(
-                        metadata,
-                        node_name,
-                        args.target_policy,
-                        include_pathology=not args.exclude_pathology_anchors,
-                        include_molecular=not args.exclude_molecular_anchors,
-                        include_clinical=args.include_clinical_anchors,
-                    )
-                    ids = [key_to_id[key] for key in keys if key in key_to_id]
-                    if not ids:
-                        continue
                     vec = shared[sample_idx, node_idx]
                     if not np.all(np.isfinite(vec)):
                         dropped_nonfinite_queries += 1
                         continue
-                    query_vectors.append(vec)
-                    query_targets.append(ids)
-                    query_records.append({
-                        'subject_id': str(subject_id),
-                        'node_name': node_name,
-                        'source': 'MRI',
-                        'target_labels': [anchor_vocab[idx]['label'] for idx in ids],
-                    })
+                    for field, spec in evaluation_specs(metadata, anchor_vocab, key_to_id, args):
+                        query_vectors.append(vec)
+                        query_targets.append(spec['positive_ids'])
+                        query_valid_ids.append(spec['valid_ids'])
+                        query_positive_counts.append(spec['positive_count'])
+                        query_fields.append(field)
+                        query_records.append({
+                            'subject_id': str(subject_id), 'node_name': node_name, 'field': field,
+                            'source': 'MRI', 'supervision_source': case_lookup[str(subject_id)].get(
+                                'anchor_provenance', 'structured_patient_metadata'),
+                            'target_labels': [anchor_vocab[idx]['label'] for idx in spec['positive_ids']],
+                            **spec,
+                        })
                 seen_cases += 1
             if max_cases is not None and seen_cases >= max_cases:
                 break
 
     prototypes = bank().detach().cpu().numpy()
-    prototypes = np.nan_to_num(prototypes, nan=0.0, posinf=0.0, neginf=0.0)
+    if not np.all(np.isfinite(prototypes)):
+        raise ValueError('Nonfinite learned prototypes')
     adjacency = np.concatenate(adjacency_mats, axis=0).mean(axis=0) if adjacency_mats else None
     if adjacency is not None:
         adjacency = np.nan_to_num(adjacency, nan=0.0, posinf=0.0, neginf=0.0)
     return {
-        'query_vectors': np.asarray(query_vectors, dtype=np.float32),
+        'query_vectors': np.asarray(query_vectors, dtype=np.float32).reshape(-1, prototypes.shape[1]),
         'query_targets': query_targets,
+        'query_valid_ids': query_valid_ids,
+        'query_positive_counts': query_positive_counts,
+        'query_fields': query_fields,
         'query_subject_ids': [record['subject_id'] for record in query_records],
         'query_records': query_records,
         'prototypes': prototypes,
@@ -860,7 +941,7 @@ def save_alignment_space_plot(records, anchor_vocab, out_dir, max_edges=160):
 
 
 def save_semantic_unit_graph(records, anchor_vocab, args, out_dir):
-    node_names = node_names_for_mode(args.node_mode)
+    node_names = ['PatientGlobal'] if args.query_mode == 'global' else node_names_for_mode(args.node_mode)
     graph_nodes = list(node_names) + [anchor['label'] for anchor in anchor_vocab]
     groups = ['MRI'] * len(node_names) + [anchor['source'] for anchor in anchor_vocab]
     adjacency = np.zeros((len(graph_nodes), len(graph_nodes)), dtype=np.float32)
@@ -923,9 +1004,14 @@ def save_json(path, payload):
 
 def save_patient_level_records(records, out_dir):
     payload = {
+        'protocol_version': PROTOCOL_VERSION,
         'subject_ids': [record['subject_id'] for record in records['query_records']],
         'node_names': [record['node_name'] for record in records['query_records']],
         'query_targets': records['query_targets'],
+        'query_valid_ids': records['query_valid_ids'],
+        'query_positive_counts': records['query_positive_counts'],
+        'query_fields': records['query_fields'],
+        'query_records': records['query_records'],
         'query_vectors': np.nan_to_num(records['query_vectors'], nan=0.0, posinf=0.0, neginf=0.0).tolist(),
         'prototypes': np.nan_to_num(records['prototypes'], nan=0.0, posinf=0.0, neginf=0.0).tolist(),
     }
@@ -947,14 +1033,9 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
         case_lookup,
         key_to_id,
         anchor_vocab,
-        max_cases=args.align_max_cases,
+        max_cases=None,
     )
-    metrics = retrieval_metrics(
-        records['query_vectors'],
-        records['query_targets'],
-        records['prototypes'],
-        subject_ids=records['query_subject_ids'],
-    )
+    metrics = score_records(records)
     metrics['case_count'] = records['case_count']
     metrics['query_count'] = int(len(records['query_vectors']))
     metrics['anchor_count'] = int(len(anchor_vocab))
@@ -962,26 +1043,14 @@ def evaluate_and_save(model, bank, loader, device, args, case_lookup, key_to_id,
 
     no_pathology_gallery = anchor_gallery(anchor_vocab, excluded_sources={'Pathology'})
     if no_pathology_gallery:
-        missing_pathology = retrieval_metrics(
-            records['query_vectors'],
-            records['query_targets'],
-            records['prototypes'],
-            gallery_ids=no_pathology_gallery,
-            subject_ids=records['query_subject_ids'],
-        )
+        missing_pathology = score_records(records, gallery_ids=no_pathology_gallery)
         metrics['pathology_unavailable'] = missing_pathology
         if 'map' in metrics and 'map' in missing_pathology:
             metrics['pathology_unavailable_map_drop'] = float(metrics['map'] - missing_pathology['map'])
 
     no_gene_gallery = anchor_gallery(anchor_vocab, excluded_sources={'Gene'})
     if no_gene_gallery:
-        metrics['molecular_unavailable'] = retrieval_metrics(
-            records['query_vectors'],
-            records['query_targets'],
-            records['prototypes'],
-            gallery_ids=no_gene_gallery,
-            subject_ids=records['query_subject_ids'],
-        )
+        metrics['molecular_unavailable'] = score_records(records, gallery_ids=no_gene_gallery)
 
     save_json(os.path.join(out_dir, 'semantic_alignment_metrics.json'), metrics)
     save_patient_level_records(records, out_dir)
@@ -1016,6 +1085,19 @@ def apply_variant(args):
         args.variant = 'graph_shared_only'
     elif args.variant == 'no_anchor':
         args.exclude_pathology_anchors = True
+    elif args.variant == 'no_anchor_loss':
+        args.lambda_anchor = 0.0
+    elif args.variant == 'global_clip':
+        args.graph_type = 'no_graph'
+        args.no_private = True
+        args.no_diffusion = True
+        args.query_mode = 'global'
+        args.alignment_objective = 'clip'
+    elif args.variant == 'multilabel':
+        args.graph_type = 'no_graph'
+        args.no_private = True
+        args.no_diffusion = True
+        args.alignment_objective = 'multilabel'
     elif args.variant == 'graph_only':
         args.no_diffusion = True
     elif args.variant == 'modality_vector':
@@ -1040,9 +1122,16 @@ def resolve_output_dir(args):
 
 
 def main(args):
-    args = apply_variant(args)
     args = apply_paper_profile(args)
+    args = apply_variant(args)
     args.out_dir = resolve_output_dir(args)
+    args.protocol_version = PROTOCOL_VERSION
+    if args.exclude_pathology_anchors and args.evaluation_fields != 'molecular':
+        raise ValueError('no_anchor must use the shared molecular endpoint, not untrained pathology prototypes')
+    if args.exclude_molecular_anchors and args.evaluation_fields == 'molecular':
+        raise ValueError('The molecular endpoint needs molecular training supervision')
+    if os.path.exists(os.path.join(args.out_dir, 'config.json')):
+        raise ValueError('Output already contains a run; use a new directory to preserve historical evidence')
     set_seed(args.seed)
     os.makedirs(args.out_dir, exist_ok=True)
     device = 'cuda' if torch.cuda.is_available() and not args.cpu else 'cpu'
@@ -1051,23 +1140,31 @@ def main(args):
         args.data_root,
         metadata_tsv=args.metadata_tsv,
         max_cases=args.max_cases,
-        seed=args.seed,
+        seed=args.sample_seed,
         include_clinical=args.include_clinical_anchors,
         allow_imaging_proxy_anchors=args.allow_imaging_proxy_anchors,
     )
     if len(cases) < 2:
         raise ValueError(f'Need at least 2 semantic cases; found {len(cases)}')
 
-    splits = stratified_split(cases, train_ratio=args.train_ratio, val_ratio=args.val_ratio, seed=args.seed)
-    if not splits['val']:
-        splits['val'] = list(splits['test'])
-    if not splits['test']:
-        splits['test'] = list(splits['val'] or splits['train'])
+    ids = [str(case['subject_id']) for case in cases]
+    if len(ids) != len(set(ids)):
+        raise ValueError('Duplicate patient identifiers found before splitting')
+    if args.splits_file:
+        with open(args.splits_file, encoding='utf-8') as file:
+            frozen = json.load(file)
+        lookup = {str(case['subject_id']): case for case in cases}
+        splits = {name: [lookup[str(sid)] for sid in frozen[name]] for name in ('train', 'val', 'test')}
+        if {str(case['subject_id']) for group in splits.values() for case in group} != set(ids):
+            raise ValueError('Frozen splits must cover exactly the discovered patient cohort')
+    else:
+        splits = stratified_split(cases, train_ratio=args.train_ratio, val_ratio=args.val_ratio, seed=args.split_seed)
+    validate_patient_splits(splits)
 
     anchor_vocab, key_to_id = build_anchor_vocab(
         splits['train'],
-        include_pathology=not args.exclude_pathology_anchors,
-        include_molecular=not args.exclude_molecular_anchors,
+        include_pathology=True,
+        include_molecular=True,
         include_clinical=args.include_clinical_anchors,
     )
     if len(anchor_vocab) < 2:
@@ -1077,6 +1174,7 @@ def main(args):
     loaders = {split: make_loader(split_cases, args, split) for split, split_cases in splits.items()}
     loss_context = {
         'medclip_ignore_ids': build_medclip_ignore_ids(anchor_vocab),
+        'anchor_vocab': anchor_vocab,
     }
 
     model = GliomaGraphDiffusionNet(
@@ -1120,6 +1218,41 @@ def main(args):
 
     save_json(os.path.join(args.out_dir, 'config.json'), vars(args))
     save_json(os.path.join(args.out_dir, 'anchor_vocab.json'), anchor_vocab)
+    coverage = {}
+    for name, split_cases in splits.items():
+        specs = [spec for case in split_cases for _, spec in evaluation_specs(case['metadata'], anchor_vocab, key_to_id, args)]
+        coverage[name] = {'patients': len(split_cases), 'field_records': len(specs),
+                          'missing_fields': sum(spec['positive_count'] == 0 for spec in specs),
+                          'oov_positive_count': sum(len(spec['oov_positive_keys']) for spec in specs)}
+        if coverage[name]['missing_fields'] == len(specs):
+            raise ValueError(f'{name} has no labels for the fixed evaluation endpoint')
+    source_hashes = {}
+    for name in ('train_semantic_alignment.py', 'semantic_evaluation.py', 'experiment_model.py',
+                 'experiment_dataset.py', 'dataset.py', 'semantic_graph_visualize.py'):
+        source = os.path.join(os.path.dirname(__file__), name)
+        with open(source, 'rb') as file:
+            source_hashes[os.path.basename(source)] = hashlib.sha256(file.read()).hexdigest()
+    artifact_hashes = {}
+    for name in ('anchor_vocab.json',):
+        with open(os.path.join(args.out_dir, name), 'rb') as file:
+            artifact_hashes[name] = hashlib.sha256(file.read()).hexdigest()
+    cohort_signature = [{'subject_id': str(case['subject_id']),
+                         'anchors': [anchor['key'] for anchor in semantic_anchors(case['metadata'], include_clinical=args.include_clinical_anchors)]}
+                        for case in sorted(cases, key=lambda case: str(case['subject_id']))]
+    artifact_hashes['normalized_cohort'] = hashlib.sha256(json.dumps(cohort_signature, sort_keys=True).encode()).hexdigest()
+    artifact_hashes['splits'] = hashlib.sha256(json.dumps(
+        {name: [str(case['subject_id']) for case in group] for name, group in splits.items()}, sort_keys=True).encode()).hexdigest()
+    save_json(os.path.join(args.out_dir, 'protocol.json'), {
+        'version': PROTOCOL_VERSION, 'source_sha256': source_hashes, 'artifact_sha256': artifact_hashes,
+        'data_hash_scope': 'normalized patient labels and splits; raw MRI files not hashed',
+        'positive_source': 'patient_metadata', 'independent_regional_pathology': False,
+        'provenance_counts': dict(Counter(case.get('anchor_provenance', 'structured_patient_metadata') for case in cases)),
+        'training_policy': args.target_policy, 'evaluation_fields': args.evaluation_fields,
+        'evaluation_policy': 'all_patient_anchors_by_field', 'unknown_labels': 'masked',
+        'region_rule_fallback': False, 'gallery_source': 'train_only',
+        'aggregation': 'region_then_field_then_patient', 'coverage': coverage,
+        'checkpoint_selection': 'validation_patient_macro_map',
+    })
     save_json(
         os.path.join(args.out_dir, 'splits.json'),
         {name: [case['subject_id'] for case in split_cases] for name, split_cases in splits.items()},
@@ -1133,12 +1266,7 @@ def main(args):
         train_losses = run_epoch(model, bank, loaders['train'], optimizer, device, args, case_lookup, key_to_id, epoch, loss_context)
         val_losses = run_epoch(model, bank, loaders['val'], None, device, args, case_lookup, key_to_id, epoch, loss_context)
         val_records = collect_alignment_records(model, bank, loaders['val'], device, args, case_lookup, key_to_id, anchor_vocab)
-        val_metrics = retrieval_metrics(
-            val_records['query_vectors'],
-            val_records['query_targets'],
-            val_records['prototypes'],
-            subject_ids=val_records['query_subject_ids'],
-        )
+        val_metrics = score_records(val_records)
         scheduler.step()
 
         epoch_record = {'epoch': epoch, 'train': train_losses, 'val': {**val_losses, **val_metrics}}
@@ -1162,7 +1290,8 @@ def main(args):
             f"dcca_fb={train_losses['dcca_fallback']:.4f} "
             f"val_mAP={val_metrics.get('map', float('nan')):.4f} "
             f"val_mrr={val_metrics.get('mrr', float('nan')):.4f} "
-            f"val_r@1={val_metrics.get('recall@1', float('nan')):.4f} "
+            f"val_hit@1={val_metrics.get('hit@1', float('nan')):.4f} "
+            f"val_recall@1={val_metrics.get('recall@1', float('nan')):.4f} "
             f"val_pairAUC={val_metrics.get('pair_auc', float('nan')):.4f}"
         )
 
@@ -1186,20 +1315,22 @@ def main(args):
     print(
         f"Test semantic alignment: mAP={test_metrics.get('map', float('nan')):.4f} "
         f"MRR={test_metrics.get('mrr', float('nan')):.4f} "
-        f"R@1={test_metrics.get('recall@1', float('nan')):.4f} "
+        f"Hit@1={test_metrics.get('hit@1', float('nan')):.4f} "
+        f"Recall@1={test_metrics.get('recall@1', float('nan')):.4f} "
         f"pairAUC={test_metrics.get('pair_auc', float('nan')):.4f}"
     )
     print(f'Output directory: {os.path.abspath(args.out_dir)}')
 
 
-if __name__ == '__main__':
+def build_parser():
     parser = argparse.ArgumentParser(
         description='Pathology-anchored semantic-unit alignment experiment',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
     parser.add_argument('--data_root', type=str, required=True, help='UTSW-Glioma root directory')
+    parser.add_argument('--experiment_name', default=None, help='Named controlled comparison in server campaign')
     parser.add_argument('--metadata_tsv', type=str, default=None, help='UTSW metadata TSV path')
-    parser.add_argument('--variant', type=str, default='full', choices=['full', 'clip', 'medclip_style', 'dcca', 'graph_shared_only', 'hgt', 'no_anchor', 'graph_only', 'modality_vector', 'no_private', 'no_graph'])
+    parser.add_argument('--variant', type=str, default='full', choices=['full', 'clip', 'global_clip', 'multilabel', 'medclip_style', 'dcca', 'graph_shared_only', 'hgt', 'no_anchor', 'no_anchor_loss', 'graph_only', 'modality_vector', 'no_private', 'no_graph'])
     parser.add_argument('--paper_config', type=str, default='none', choices=['none', 'paper1', 'paper2', 'paper3'])
     parser.add_argument('--out_dir', type=str, default=DEFAULT_OUT_DIR)
     parser.add_argument('--validation_output_root', type=str, default=DEFAULT_VALIDATION_OUTPUT_ROOT)
@@ -1216,6 +1347,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--feat_dim', type=int, default=256)
     parser.add_argument('--node_mode', type=str, default='regions', choices=['regions', 'modalities'])
+    parser.add_argument('--query_mode', choices=['units', 'global'], default='units', help='Matched same-encoder regional units versus pooled patient embedding')
     parser.add_argument('--graph_type', type=str, default='learnable', choices=['no_graph', 'fixed', 'similarity', 'learnable', 'random'])
     parser.add_argument('--shared_dim', type=int, default=128)
     parser.add_argument('--private_dim', type=int, default=128)
@@ -1231,7 +1363,9 @@ if __name__ == '__main__':
     parser.add_argument('--no_private', action='store_true')
     parser.add_argument('--no_diffusion', action='store_true')
 
-    parser.add_argument('--target_policy', type=str, default='region_rules', choices=['region_rules', 'all_patient_anchors'])
+    parser.add_argument('--target_policy', type=str, default='all_patient_anchors', choices=['region_rules', 'all_patient_anchors'], help='Patient labels are the primary task; region rules are an auxiliary assumption')
+    parser.add_argument('--evaluation_fields', choices=['molecular', 'all'], default='molecular', help='Fixed endpoint shared across full/no_anchor')
+    parser.add_argument('--splits_file', default=None, help='Frozen train/val/test patient IDs JSON')
     parser.add_argument('--exclude_pathology_anchors', action='store_true')
     parser.add_argument('--exclude_molecular_anchors', action='store_true')
     parser.add_argument('--include_clinical_anchors', action='store_true')
@@ -1244,7 +1378,7 @@ if __name__ == '__main__':
     parser.add_argument('--lr', type=float, default=3e-4)
     parser.add_argument('--weight_decay', type=float, default=1e-4)
     parser.add_argument('--temperature', type=float, default=0.07)
-    parser.add_argument('--alignment_objective', type=str, default='clip', choices=['clip', 'medclip', 'dcca'])
+    parser.add_argument('--alignment_objective', type=str, default='clip', choices=['clip', 'medclip', 'dcca', 'multilabel', 'single_positive'])
     parser.add_argument('--dcca_reg', type=float, default=1e-3)
     parser.add_argument('--dcca_clip_weight', type=float, default=0.2)
     parser.add_argument('--lambda_anchor', type=float, default=0.05)
@@ -1257,6 +1391,12 @@ if __name__ == '__main__':
     parser.add_argument('--lambda_load_balance', type=float, default=0.0)
     parser.add_argument('--grad_clip', type=float, default=1.0)
     parser.add_argument('--seed', type=int, default=42)
+    parser.add_argument('--split_seed', type=int, default=42)
+    parser.add_argument('--sample_seed', type=int, default=42)
     parser.add_argument('--cpu', action='store_true')
 
-    main(parser.parse_args())
+    return parser
+
+
+if __name__ == '__main__':
+    main(build_parser().parse_args())

@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-09",
+  "commit": "f94cf1ec1041c9f15f78c84fb42bb384103d003f",
+  "branch": "main",
+  "user_default_model": "gpt-6.1-sol",
+  "user_default_effort": "low",
+  "active_chat_model": "not verified",
+  "project_config_before": "absent",
+  "files": [
+    {
+      "path": "train_semantic_alignment.py",
+      "sha256": "ACD66C113D36FC69D5BE7BA2EF045550EED1E2013CE1FB171D5F30DCD421C4FB"
+    },
+    {
+      "path": "experiment_dataset.py",
+      "sha256": "ABC522FDF082FA3EA566912641158D51662969A56AC7A3A36709BF176D75AF32"
+    },
+    {
+      "path": "experiment_model.py",
+      "sha256": "63DA62CFE93727741DFFCBBC77A813077D654CF4276D535D0A9BC16D29B851A0"
+    },
+    {
+      "path": "output/goal-https-openreview-net-pdf-https/outputs/Chapter3_Method_GDI_20260609.tex",
+      "sha256": "1F2ED1AC6674F7B53CC46AF4B462975F77FB0D11E3A5CE753EEEF57D1C625188"
+    },
+    {
+      "path": "output/goal-https-openreview-net-pdf-https/outputs/Experiments_Results_Findings_20260617.tex",
+      "sha256": "19D11F00667D25DFE89F3A42D01FC683F4AD8CA5A10E14445C5A0CE0FA8C1881"
+    },
+    {
+      "path": "output/goal-https-openreview-net-pdf-https/outputs/Experiment_Evidence_Source_Notes_20260617.md",
+      "sha256": "9AD19B227040D231181967374D43D0AFCA39FA1594E2F6E6EFF4490D92539E6B"
+    },
+    {
+      "path": "output/goal-https-openreview-net-pdf-https/work/evidence/sota_comparison_table.csv",
+      "sha256": "192F336A63132A0E0719391C40BF36356770F3A8C5F73695296B3D26EBD8CBDF"
+    }
+  ]
+}

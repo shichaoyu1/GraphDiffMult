@@ -2,14 +2,22 @@ import argparse
 import csv
 import json
 import math
+import os
+import sys
 from collections import defaultdict
 from pathlib import Path
 
 import numpy as np
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from semantic_evaluation import PROTOCOL_VERSION, retrieval_metrics as revised_retrieval_metrics
+
 
 METRIC_KEYS = [
     "map",
+    "hit@1",
+    "hit@5",
+    "hit@10",
     "recall@1",
     "recall@5",
     "recall@10",
@@ -19,6 +27,7 @@ METRIC_KEYS = [
     "edge_precision@25",
     "edge_precision@50",
     "anchor_consistency",
+    "positive_negative_similarity_gap",
     "positive_negative_distance_gap",
 ]
 
@@ -159,12 +168,24 @@ def load_run(run_dir):
     prototypes = np.asarray(records["prototypes"], dtype=np.float32)
     query_targets = [list(map(int, ids)) for ids in records["query_targets"]]
     subject_ids = [str(x) for x in records["subject_ids"]]
+    protocol_version = records.get('protocol_version', 'legacy_v1')
+    signature = None
+    if protocol_version == PROTOCOL_VERSION:
+        protocol = load_json(run_dir / 'protocol.json')
+        signature = json.dumps({'artifacts': protocol['artifact_sha256'],
+                                'sources': protocol['source_sha256'],
+                                'fields': protocol['evaluation_fields']}, sort_keys=True)
     patient_to_indices = defaultdict(list)
     for idx, sid in enumerate(subject_ids):
         patient_to_indices[sid].append(idx)
     return {
         "run_dir": str(run_dir),
-        "variant": str(config.get("variant", "")),
+        "protocol_version": protocol_version,
+        "comparison_signature": signature,
+        "query_valid_ids": records.get('query_valid_ids'),
+        "query_positive_counts": records.get('query_positive_counts'),
+        "query_fields": records.get('query_fields'),
+        "variant": str(config.get('experiment_name') or config.get("variant", "")),
         "seed": int(config.get("seed", -1)),
         "query_vectors": query_vectors,
         "prototypes": prototypes,
@@ -174,13 +195,22 @@ def load_run(run_dir):
     }
 
 
-def run_metrics_on_indices(run_data, indices):
+def run_metrics_on_indices(run_data, indices, bootstrap_subject_ids=None):
     if not indices:
         return {key: float("nan") for key in METRIC_KEYS}
     q = run_data["query_vectors"][indices]
     t = [run_data["query_targets"][idx] for idx in indices]
-    subject_ids = [run_data["subject_ids"][idx] for idx in indices]
-    metrics = retrieval_metrics(q, t, run_data["prototypes"], subject_ids=subject_ids)
+    subject_ids = bootstrap_subject_ids or [run_data["subject_ids"][idx] for idx in indices]
+    if run_data['protocol_version'] == PROTOCOL_VERSION:
+        metrics = revised_retrieval_metrics(
+            q, t, run_data['prototypes'], subject_ids=subject_ids,
+            valid_ids=[run_data['query_valid_ids'][idx] for idx in indices],
+            positive_counts=[run_data['query_positive_counts'][idx] for idx in indices],
+            field_names=[run_data['query_fields'][idx] for idx in indices])
+    elif run_data['protocol_version'] == 'legacy_v1':
+        metrics = retrieval_metrics(q, t, run_data["prototypes"], subject_ids=subject_ids)
+    else:
+        raise ValueError('Unknown evaluation protocol')
     return {key: float(metrics.get(key, float("nan"))) for key in METRIC_KEYS}
 
 
@@ -200,12 +230,23 @@ def bootstrap_variant(runs, n_bootstrap=2000, seed=2026):
         point[key] = float(np.mean(values)) if values else float("nan")
 
     samples = defaultdict(list)
+    revised = runs[0]['protocol_version'] == PROTOCOL_VERSION
     for _ in range(n_bootstrap):
-        sampled_runs = rng.choice(runs, size=len(runs), replace=True)
+        sampled_runs = runs if revised else rng.choice(runs, size=len(runs), replace=True)
+        shared_patients = None
+        if revised:
+            patients = sorted(runs[0]['patient_to_indices'])
+            shared_patients = rng.choice(patients, size=len(patients), replace=True)
         iter_values = defaultdict(list)
         for run_data in sampled_runs:
-            indices = sample_patient_indices(run_data["patient_to_indices"], rng)
-            row = run_metrics_on_indices(run_data, indices)
+            patients = list(run_data['patient_to_indices'])
+            sampled_patients = shared_patients if revised else rng.choice(patients, size=len(patients), replace=True)
+            indices, sampled_ids = [], []
+            for draw, patient in enumerate(sampled_patients):
+                group = run_data['patient_to_indices'][patient]
+                indices.extend(group)
+                sampled_ids.extend([f'draw_{draw}'] * len(group))
+            row = run_metrics_on_indices(run_data, indices, sampled_ids)
             for key in METRIC_KEYS:
                 value = row.get(key, float("nan"))
                 if not math.isnan(float(value)):
@@ -228,6 +269,8 @@ def discover_runs(output_root, run_id=None):
     runs = []
     for record_file in output_root.rglob("patient_level_records.json"):
         run_dir = record_file.parent
+        if run_dir.name.startswith('attempt_') and not (run_dir / 'complete.json').exists():
+            continue
         if run_id and not run_dir.name.endswith(run_id):
             continue
         config_path = run_dir / "config.json"
@@ -251,6 +294,10 @@ def main():
     runs = discover_runs(output_root, run_id=args.run_id)
     if not runs:
         raise SystemExit("No runs with patient_level_records.json found.")
+    if len({run['protocol_version'] for run in runs}) != 1:
+        raise SystemExit('Cannot pool legacy and revised protocols; select a protocol-specific output root')
+    if runs[0]['protocol_version'] == PROTOCOL_VERSION and len({run['comparison_signature'] for run in runs}) != 1:
+        raise SystemExit('Revised runs must share cohort, splits, vocabulary, endpoint and source versions')
 
     by_variant = defaultdict(list)
     for run_data in runs:
@@ -263,6 +310,8 @@ def main():
         point, ci = bootstrap_variant(variant_runs, n_bootstrap=args.n_bootstrap, seed=args.seed)
         seeds = sorted({run_data["seed"] for run_data in variant_runs})
         summary_json[variant] = {
+            "protocol_version": variant_runs[0]['protocol_version'],
+            "ci_scope": 'fixed_trained_seeds_patient_bootstrap' if variant_runs[0]['protocol_version'] == PROTOCOL_VERSION else 'legacy_run_and_patient_bootstrap',
             "n_seeds": len(seeds),
             "seeds": seeds,
             "point": point,

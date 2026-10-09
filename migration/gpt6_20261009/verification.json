@@ -1,0 +1,10 @@
+{
+  "date": "2026-10-09",
+  "command": "python migration/gpt6_20261009/verify_trials.py",
+  "exit_code": 0,
+  "synthetic_patient_regions": 3,
+  "empty_selected_fields_fallback_checked": true,
+  "sol_low": {"behavior_cases": 6, "invalid_cases": 7, "status": "pass"},
+  "astra_low": {"behavior_cases": 6, "invalid_cases": 7, "status": "pass"},
+  "execution_note": "Initial sandbox Path.resolve failed with WinError 5. Approved elevated retry passed. No patient data or training used."
+}
