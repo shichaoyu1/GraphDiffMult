@@ -44,6 +44,8 @@
 
 ## 模型与使用方式
 
+近年方法对比（2026-10-09）：文献核查在 `research/sota_alignment_20261009/`，选择CARZero(CVPR2024)/RadZero(NeurIPS2025)真实官方对齐模块的MRI元数据适配。6方案×3seeds共18个正式运行，另有训练频率控制；运行说明为 SOTA_ALIGNMENT_RUN.md，入口 tools/run_recent_alignment.py。新协议 pasa_recent_alignment_v1 先汇总患者分数再字段排名，与旧区域评分不同，必须全部重跑。用户在AutoDL启动，尚无正式数值；合成缓存不充当预训练结果。
+
 服务器准备：AutoDL路径与RTX4080配置已写入 SERVER_RUN.md；新调度器支持冻结协议、分阶段运行和保留失败attempt。19项本地测试通过，上传包为 artifacts/PASA_SERVER_V2.zip。尚未连接服务器、读取服务器真实队列或启动远程实验。
 
 迁移前用户默认配置已为 GPT-6.1 Sol / low；这不证明当前聊天正在用相同设置。日常候选保持该组合，关键研究审计采用 Astra 复核。试用记录负责说明实测结果与限制，模型一致意见不作为科学真值。模型自动路由不是 AGENTS.md 能保证的功能。

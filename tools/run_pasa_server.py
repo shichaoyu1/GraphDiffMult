@@ -26,12 +26,12 @@ def write_json(path, payload):
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
-def parser():
+def parser(stages=('prepare', 'smoke', 'core', 'ablation', 'all')):
     result = argparse.ArgumentParser(description=__doc__)
     result.add_argument('--data_root', default='/root/autodl-tmp/dataset/UTSW-Glioma')
     result.add_argument('--metadata_tsv', default='/root/autodl-tmp/dataset/UTSW_Glioma_Metadata-2-1.tsv')
     result.add_argument('--output_root', required=True)
-    result.add_argument('--stage', choices=['prepare', 'smoke', 'core', 'ablation', 'all'], default='smoke')
+    result.add_argument('--stage', choices=stages, default='smoke')
     result.add_argument('--seeds', type=int, nargs='+', default=[42, 43, 44])
     result.add_argument('--epochs', type=int, default=30)
     result.add_argument('--batch_size', type=int, default=2)
@@ -59,7 +59,14 @@ def prepare(args):
     if not args.cpu and not torch.cuda.is_available():
         raise ValueError('CUDA is unavailable; check the server PyTorch installation before running')
     cases = training.discover_semantic_cases(str(data_root), metadata_tsv=str(metadata), seed=args.sample_seed)
-    splits = stratified_split(cases, train_ratio=args.train_ratio, val_ratio=args.val_ratio, seed=args.split_seed)
+    if getattr(args, 'reference_splits', None):
+        frozen = json.loads(Path(args.reference_splits).read_text(encoding='utf-8'))
+        lookup = {str(case['subject_id']): case for case in cases}
+        splits = {name: [lookup[str(sid)] for sid in frozen[name]] for name in ('train', 'val', 'test')}
+        if {str(case['subject_id']) for group in splits.values() for case in group} != set(lookup):
+            raise ValueError('Reference splits do not cover exactly this cohort')
+    else:
+        splits = stratified_split(cases, train_ratio=args.train_ratio, val_ratio=args.val_ratio, seed=args.split_seed)
     validate_patient_splits(splits)
     vocab, key_to_id = training.build_anchor_vocab(splits['train'])
     endpoint = argparse.Namespace(evaluation_fields='molecular')
@@ -74,7 +81,8 @@ def prepare(args):
                           'oov_positives': sum(len(spec['oov_positive_keys']) for spec in specs)}
     identity = {'protocol_version': PROTOCOL_VERSION, 'data_root': str(data_root),
                 'metadata_tsv': str(metadata), 'metadata_sha256': digest(metadata),
-                'source_sha256': {name: digest(ROOT / name) for name in SOURCES},
+                'source_sha256': {name: digest(ROOT / name) for name in SOURCES + getattr(args, 'extra_source_files', [])},
+                'benchmark_settings': getattr(args, 'benchmark_settings', None),
                 'split_seed': args.split_seed, 'sample_seed': args.sample_seed,
                 'train_ratio': args.train_ratio, 'val_ratio': args.val_ratio,
                 'roi_size': args.roi_size, 'z_slices': args.z_slices,
@@ -134,7 +142,7 @@ def jobs(args):
                 yield group, name, seed, command + extra
 
 
-def run_job(root, group, name, seed, command):
+def run_job(root, group, name, seed, command, expected_protocol='pasa_patient_metadata_v2'):
     job_root = root / 'runs' / group / f'{name}_s{seed}'
     attempts = sorted(job_root.glob('attempt_*')) if job_root.exists() else []
     for attempt in attempts:
@@ -167,7 +175,7 @@ def run_job(root, group, name, seed, command):
     if code != 0:
         raise RuntimeError(f'Job failed ({code}). See {attempt / "train.log"}. Rerunning creates a fresh attempt.')
     metrics = json.loads((attempt / 'test_metrics.json').read_text(encoding='utf-8'))
-    if metrics.get('protocol_version') != 'pasa_patient_metadata_v2' or not metrics.get('scored_queries'):
+    if metrics.get('protocol_version') != expected_protocol or not metrics.get('scored_queries'):
         raise ValueError('Job finished without scorable v2 test output')
     write_json(attempt / 'complete.json', {'base_command': command, 'duration_seconds': time.time() - started})
 

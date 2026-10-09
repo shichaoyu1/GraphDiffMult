@@ -56,11 +56,15 @@ def binary_auc(labels, scores):
 
 def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None,
                       ks=(1, 5, 10), subject_ids=None, valid_ids=None,
-                      positive_counts=None, field_names=None):
+                      positive_counts=None, field_names=None, precomputed_scores=None):
     """Field-region-patient macro scoring; missing candidates stay in recall denominators."""
     q = np.asarray(query_vectors, dtype=np.float32)
     p = np.asarray(prototypes, dtype=np.float32)
     n = len(target_ids)
+    if precomputed_scores is not None:
+        precomputed_scores = np.asarray(precomputed_scores, dtype=float)
+        if precomputed_scores.shape != (n, len(p)) or not np.all(np.isfinite(precomputed_scores)):
+            raise ValueError('Precomputed scores must be finite query-by-gallery logits')
     if len(q) != n or (n and (q.ndim != 2 or p.ndim != 2 or q.shape[1] != p.shape[1])):
         raise ValueError('Query, target and prototype shapes do not agree')
     if not np.all(np.isfinite(q)) or not np.all(np.isfinite(p)):
@@ -94,7 +98,7 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None,
         candidates = [idx for idx in gallery if idx in set(valid_ids[i])]
         positives = set(ids).intersection(candidates)
         oov += expected - len(positives)
-        scores = q[i] @ p[candidates].T
+        scores = q[i] @ p[candidates].T if precomputed_scores is None else precomputed_scores[i, candidates]
         order = np.argsort(-scores, kind='stable')
         ranking = [candidates[idx] for idx in order]
         row = {}
@@ -110,12 +114,12 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None,
         pos = [j for j, idx in enumerate(candidates) if idx in positives]
         neg = [j for j, idx in enumerate(candidates) if idx not in positives]
         no_negatives += int(not neg)
-        row['average_positive_similarity'] = float(np.mean(scores[pos])) if pos else float('nan')
-        row['average_negative_similarity'] = float(np.mean(scores[neg])) if neg else float('nan')
+        row['average_positive_similarity'] = float(np.mean(scores[pos])) if pos and precomputed_scores is None else float('nan')
+        row['average_negative_similarity'] = float(np.mean(scores[neg])) if neg and precomputed_scores is None else float('nan')
         row['positive_negative_similarity_gap'] = (row['average_positive_similarity'] - row['average_negative_similarity'])
         distances = np.linalg.norm(q[i] - p[candidates], axis=1)
         row['positive_negative_distance_gap'] = (float(np.mean(distances[neg]) - np.mean(distances[pos]))
-                                               if pos and neg else float('nan'))
+                                               if pos and neg and precomputed_scores is None else float('nan'))
         rows.append((str(subject_ids[i]), str(field_names[i]), row))
     metrics = {}
     for name in names:
@@ -133,3 +137,12 @@ def retrieval_metrics(query_vectors, target_ids, prototypes, gallery_ids=None,
                    unavailable_positive_count=oov, queries_without_known_negatives=no_negatives,
                    scored_patients=len({patient for patient, _, _ in rows}))
     return metrics
+
+
+def score_retrieval_metrics(scores, target_ids, **kwargs):
+    """Evaluate arbitrary alignment logits without calling them cosine similarities."""
+    scores = np.asarray(scores, dtype=float)
+    if scores.ndim != 2:
+        raise ValueError('Expected a query-by-gallery score matrix')
+    return retrieval_metrics(np.zeros((len(scores), 1)), target_ids,
+                             np.zeros((scores.shape[1], 1)), precomputed_scores=scores, **kwargs)

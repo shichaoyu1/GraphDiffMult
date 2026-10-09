@@ -1,0 +1,2 @@
+# Extra dependencies for the shared text cache and official RadZero alignment encoder.
+transformers==4.49.0

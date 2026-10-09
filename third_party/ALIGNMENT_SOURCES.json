@@ -1,0 +1,29 @@
+{
+  "CARZero": {
+    "repository": "https://github.com/laihaoran/CARZero",
+    "commit": "fa4e09cdfe7801e36e83d96815e3fcf66ffdd13d",
+    "license": "Apache-2.0",
+    "upstream_files": {
+      "dqn_wo_self_atten.py": "6ce5a11e0136baa706b125a994c94727197f813d9bb55c4eeea675709cadf1b5",
+      "transformer_decoder.py": "c628254ca4fffe3c013d7866da4f348888f64a7b6308c302b7f367ca77e7d11c"
+    },
+    "changes": "Remove unused heavyweight imports; fix package-relative import; trim trailing whitespace. Alignment computation unchanged."
+  },
+  "RadZero": {
+    "repository": "https://github.com/deepnoid-ai/RadZero",
+    "commit": "656ae5f1af3f106e96c95542ce3ee5c0ee8777fc",
+    "license": "CC-BY-NC-4.0",
+    "upstream_files": {
+      "losses.py": "c135e5cad6e2c3bc5b05b0937052377c3f790835ed6fc230bef6487f9d8991a5"
+    },
+    "changes": "Extract SimilarityLogit and reference loss functions; preserve singleton batch/candidate axes by explicit squeeze(-1)."
+  },
+  "DINOv2_blocks": {
+    "repository": "https://github.com/huggingface/transformers",
+    "commit": "a22a4378d97d06b7a1d9abad6e0086d30fdea199",
+    "tag": "v4.49.0",
+    "license": "Apache-2.0",
+    "sha256": "c8621ee9372230175aa46fd09e3dc94eb0b567370652b9fed7f36515d33e5997",
+    "changes": "Extract eager non-pruned GELU forward blocks; stack two as the official RadZero visual adapter. No external HF import during training."
+  }
+}
