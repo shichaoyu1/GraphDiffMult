@@ -78,3 +78,9 @@ tail -f /root/autodl-tmp/sota_alignment_20261009.log
 `summary.csv`逐运行结果；`sota_mean.csv`跨seed均值/SD；`paired_comparisons.json`主要终点成对差；每个成功运行有config/参数量、source与数据定义、text cache hash、history、best.pt、patient_score_records.json和test_metrics.json。正式阶段结束后自动汇总；缺失运行或协议不一致会停止汇总。
 
 正式训练由用户在AutoDL执行。本地只验证实现、张量梯度、损失公式、保存/重评分和合成流程。取得完整结果后再判断PASA对不同机制是否有优势，并按结果修订主张，不预设PASA必须胜出。
+
+## JSON查看修复（2026-10-15）
+
+旧输出将不可计算的指标写作NaN，Python可以读，但Jupyter的严格JSON查看器会拒绝。新输出将非有限指标写为null，并原子替换文件；null表示未定义，不是零分。32项合成回归通过。
+
+训练进行中不要拉取会改变冻结源码的更新。可以单独下载独立的 `tools/repair_result_json.py`，运行 `python /tmp/pasa_repair_json.py --root 实验目录`；在该目录的 `json_view/` 下生成history.json镜像副本，原文件和模型不变，无需重训练。使用 `--pattern '*.json'` 可一并转换指标文件。副本是生成时的快照，训练追加后需再次转换。若遇半写入或损坏JSON，工具会跳过并提示，而不会修改原始证据。

@@ -7,10 +7,11 @@ import zipfile
 
 
 ROOT = Path(os.path.abspath(__file__)).parent.parent
-FILES = ['train_semantic_alignment.py', 'semantic_evaluation.py', 'experiment_model.py',
+FILES = ['train_semantic_alignment.py', 'semantic_evaluation.py', 'json_results.py', 'experiment_model.py',
          'experiment_dataset.py', 'dataset.py', 'semantic_graph_visualize.py', 'requirements.txt',
          'tools/run_pasa_server.py', 'tools/package_pasa_server.py', 'utils/bootstrap_semantic_5seed.py',
-         'tests/test_semantic_review_revision.py', 'tests/test_pasa_server_runner.py',
+         'tests/test_semantic_review_revision.py', 'tests/test_pasa_server_runner.py', 'tests/test_json_results.py',
+         'tools/repair_result_json.py',
          'SERVER_RUN.md', 'PASA_EVALUATION_PROTOCOL.md',
          'revision/pasa_review_20261009/REVISION_PLAN.md',
          'revision/pasa_review_20261009/CODE_CHANGES.md']

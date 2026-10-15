@@ -11,6 +11,7 @@ import argparse
 import json
 import os
 import hashlib
+from json_results import write_json as write_result_json
 from collections import Counter, defaultdict
 
 import matplotlib.pyplot as plt
@@ -998,8 +999,7 @@ def save_semantic_unit_graph(records, anchor_vocab, args, out_dir):
 
 
 def save_json(path, payload):
-    with open(path, 'w', encoding='utf-8') as file:
-        json.dump(payload, file, indent=2, ensure_ascii=False)
+    write_result_json(path, payload)
 
 
 def save_patient_level_records(records, out_dir):
@@ -1227,7 +1227,7 @@ def main(args):
         if coverage[name]['missing_fields'] == len(specs):
             raise ValueError(f'{name} has no labels for the fixed evaluation endpoint')
     source_hashes = {}
-    for name in ('train_semantic_alignment.py', 'semantic_evaluation.py', 'experiment_model.py',
+    for name in ('train_semantic_alignment.py', 'semantic_evaluation.py', 'json_results.py', 'experiment_model.py',
                  'experiment_dataset.py', 'dataset.py', 'semantic_graph_visualize.py'):
         source = os.path.join(os.path.dirname(__file__), name)
         with open(source, 'rb') as file:

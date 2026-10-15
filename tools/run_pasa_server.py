@@ -12,18 +12,15 @@ import time
 ROOT = Path(os.path.abspath(__file__)).parent.parent
 os.environ.setdefault('MPLBACKEND', 'Agg')
 sys.path.insert(0, str(ROOT))
+from json_results import write_json
 SOURCES = ['train_semantic_alignment.py', 'semantic_evaluation.py', 'experiment_model.py',
+           'json_results.py',
            'experiment_dataset.py', 'dataset.py', 'semantic_graph_visualize.py',
            'tools/run_pasa_server.py', 'utils/bootstrap_semantic_5seed.py']
 
 
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
-def write_json(path, payload):
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding='utf-8')
 
 
 def parser(stages=('prepare', 'smoke', 'core', 'ablation', 'all')):
