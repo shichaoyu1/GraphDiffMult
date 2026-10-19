@@ -54,3 +54,13 @@ python -u -B tools/diagnose_pasa_server.py --campaign output/sota_alignmentv2_20
 真实患者数据由用户在 AutoDL 执行。本地覆盖空区域统计、诊断后模型参数/BN/EMA 不变、固定种子复现，以及完整命令的合成流程；后者还验证不读取测试病例、无参数更新、原检查点字节不变。合成流程不代表真实患者诊断已经运行。
 
 阶段性汇总报告与诊断脚本随代码保留；患者级原始证据 ZIP 和返回结果留在本地。
+
+## 诊断返回后的空区域来源核查
+
+本轮返回结果发现训练31人、验证3人三个区域全空。先执行CPU分割审计，无需下载模型或进行训练：
+
+```bash
+python -u -B tools/audit_pasa_region_inputs.py --diagnostics output/pasa_diagnostics_20261019_165637_406586
+```
+
+输出保存至独立的 `output/pasa_region_audit_<时间>/`，完成标志同样是 `complete.json` 和日志 `COMPLETE:`。检查全体积/采样切片标签、空掩码原因和影像—分割几何信息；不预设新标签映射。返回该目录后再确定输入修正策略。
