@@ -1,0 +1,77 @@
+{
+  "positive_competition_synthetic": [
+    {
+      "per_positive": false,
+      "loss": 0.0006704330444335938,
+      "gradient": [
+        [
+          -0.0006701946258544922,
+          -3.042805474251509e-08,
+          0.00033522245939821005,
+          0.00033522245939821005
+        ]
+      ],
+      "easy_to_hard_positive_gradient_ratio": 22025.54949784792
+    },
+    {
+      "per_positive": true,
+      "loss": 1.3796470165252686,
+      "gradient": [
+        [
+          -0.0003352165222167969,
+          -0.46831053495407104,
+          0.23432289063930511,
+          0.23432289063930511
+        ]
+      ],
+      "easy_to_hard_positive_gradient_ratio": 0.0007157996611151889
+    }
+  ],
+  "unknown_mask_gradient": [
+    [
+      -0.11920297145843506,
+      0.11920291185379028,
+      0.0
+    ]
+  ],
+  "selected_graph_weights_vs_initialization": [
+    {
+      "seed": 42,
+      "graph_parameter_max_abs_change": 7.450580596923828e-09,
+      "parameters": {
+        "encoder.graph_builder.edge_mlp.0.weight": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.0.bias": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.2.weight": 7.450580596923828e-09,
+        "encoder.graph_builder.edge_mlp.2.bias": 0.0
+      }
+    },
+    {
+      "seed": 43,
+      "graph_parameter_max_abs_change": 7.450580596923828e-09,
+      "parameters": {
+        "encoder.graph_builder.edge_mlp.0.weight": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.0.bias": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.2.weight": 7.450580596923828e-09,
+        "encoder.graph_builder.edge_mlp.2.bias": 0.0
+      }
+    },
+    {
+      "seed": 44,
+      "graph_parameter_max_abs_change": 7.450580596923828e-09,
+      "parameters": {
+        "encoder.graph_builder.edge_mlp.0.weight": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.0.bias": 3.725290298461914e-09,
+        "encoder.graph_builder.edge_mlp.2.weight": 7.450580596923828e-09,
+        "encoder.graph_builder.edge_mlp.2.bias": 7.450580596923828e-09
+      }
+    }
+  ],
+  "synthetic_eval_repetition": {
+    "different_rng_max_abs_difference": 0.0011173337697982788,
+    "reset_rng_max_abs_difference": 0.0
+  },
+  "graph_warmup_synthetic": {
+    "builder_parameters_with_gradient": 0,
+    "shared_heads_with_gradient": 12
+  }
+}

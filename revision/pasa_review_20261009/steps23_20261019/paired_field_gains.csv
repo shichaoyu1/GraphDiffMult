@@ -1,0 +1,46 @@
+﻿method,seed,field,corrected_vs_full,new_errors_vs_full,unchanged
+carzero_metadata,42,IDH,6,1,117
+carzero_metadata,42,1p19Q CODEL,0,0,56
+carzero_metadata,42,MGMT,0,0,51
+carzero_metadata,43,IDH,12,1,111
+carzero_metadata,43,1p19Q CODEL,0,0,56
+carzero_metadata,43,MGMT,4,16,31
+carzero_metadata,44,IDH,9,0,115
+carzero_metadata,44,1p19Q CODEL,1,0,55
+carzero_metadata,44,MGMT,5,10,36
+pasa_minimal,42,IDH,0,0,124
+pasa_minimal,42,1p19Q CODEL,0,0,56
+pasa_minimal,42,MGMT,0,0,51
+pasa_minimal,43,IDH,0,0,124
+pasa_minimal,43,1p19Q CODEL,0,0,56
+pasa_minimal,43,MGMT,0,0,51
+pasa_minimal,44,IDH,0,0,124
+pasa_minimal,44,1p19Q CODEL,0,0,56
+pasa_minimal,44,MGMT,0,0,51
+pasa_text_control,42,IDH,0,0,124
+pasa_text_control,42,1p19Q CODEL,0,0,56
+pasa_text_control,42,MGMT,0,0,51
+pasa_text_control,43,IDH,0,0,124
+pasa_text_control,43,1p19Q CODEL,0,0,56
+pasa_text_control,43,MGMT,0,0,51
+pasa_text_control,44,IDH,0,0,124
+pasa_text_control,44,1p19Q CODEL,0,0,56
+pasa_text_control,44,MGMT,0,0,51
+radzero_metadata,42,IDH,17,4,103
+radzero_metadata,42,1p19Q CODEL,0,0,56
+radzero_metadata,42,MGMT,1,3,47
+radzero_metadata,43,IDH,20,4,100
+radzero_metadata,43,1p19Q CODEL,2,2,52
+radzero_metadata,43,MGMT,1,3,47
+radzero_metadata,44,IDH,20,3,101
+radzero_metadata,44,1p19Q CODEL,0,0,56
+radzero_metadata,44,MGMT,1,5,45
+text_cosine,42,IDH,15,2,107
+text_cosine,42,1p19Q CODEL,2,2,52
+text_cosine,42,MGMT,0,0,51
+text_cosine,43,IDH,15,5,104
+text_cosine,43,1p19Q CODEL,3,4,49
+text_cosine,43,MGMT,0,0,51
+text_cosine,44,IDH,17,3,104
+text_cosine,44,1p19Q CODEL,0,0,56
+text_cosine,44,MGMT,0,0,51

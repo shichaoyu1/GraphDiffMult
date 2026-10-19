@@ -1,0 +1,1570 @@
+{
+  "campaigns": {
+    "pasa_v2_20261009": {
+      "split_sizes": {
+        "train": 438,
+        "val": 63,
+        "test": 124
+      },
+      "split_overlaps": {
+        "train_val": 0,
+        "test_train": 0,
+        "test_val": 0
+      },
+      "groups": {
+        "smoke/unit_retrieval": [
+          {
+            "run": "pasa_v2_20261009\\runs\\smoke\\unit_retrieval_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ]
+      }
+    },
+    "pasa_v2_20261009_1707": {
+      "split_sizes": {
+        "train": 438,
+        "val": 63,
+        "test": 124
+      },
+      "split_overlaps": {
+        "train_val": 0,
+        "test_train": 0,
+        "test_val": 0
+      },
+      "groups": {
+        "ablation/full": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\full_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\full_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\full_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "ablation/without_center_loss": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_center_loss_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_center_loss_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_center_loss_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "ablation/without_diffusion": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_diffusion_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7347670250896056,
+            "map": 0.867383512544803,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_diffusion_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_diffusion_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "ablation/without_graph": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_graph_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.75,
+            "map": 0.8750000000000001,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_graph_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_graph_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7486559139784946,
+            "map": 0.8743279569892474,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "ablation/without_pathology_supervision": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_pathology_supervision_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_pathology_supervision_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\ablation\\without_pathology_supervision_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "core/pooled_global": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\pooled_global_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7486559139784946,
+            "map": 0.8743279569892474,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\pooled_global_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7620967741935485,
+            "map": 0.8810483870967741,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\pooled_global_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.8118279569892474,
+            "map": 0.9059139784946236,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "core/unit_multilabel": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_multilabel_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7576164874551972,
+            "map": 0.8788082437275985,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_multilabel_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.743279569892473,
+            "map": 0.8716397849462366,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_multilabel_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7482078853046595,
+            "map": 0.8741039426523296,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "core/unit_retrieval": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_retrieval_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7455197132616488,
+            "map": 0.8727598566308244,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_retrieval_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7477598566308243,
+            "map": 0.8738799283154123,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_retrieval_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7441756272401433,
+            "map": 0.8720878136200718,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ],
+        "core/unit_single_positive": [
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_single_positive_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7473118279569892,
+            "map": 0.8736559139784946,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_single_positive_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7450716845878136,
+            "map": 0.8725358422939069,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          },
+          {
+            "run": "pasa_v2_20261009_1707\\runs\\core\\unit_single_positive_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": true,
+            "hit@1": 0.7459677419354838,
+            "map": 0.8729838709677421,
+            "biomarker_macro_auc": null,
+            "wall_seconds": null
+          }
+        ]
+      }
+    },
+    "sota_alignment_20261009": {
+      "split_sizes": {
+        "train": 438,
+        "val": 63,
+        "test": 124
+      },
+      "split_overlaps": {
+        "train_val": 0,
+        "test_train": 0,
+        "test_val": 0
+      },
+      "groups": {
+        "smoke/carzero_metadata": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\carzero_metadata_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.5172744319626471,
+            "wall_seconds": 642.5337634086609
+          }
+        ],
+        "smoke/pasa_full": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\pasa_full_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7029569892473118,
+            "map": 0.851478494623656,
+            "biomarker_macro_auc": 0.5850326058063472,
+            "wall_seconds": 613.4033250808716
+          }
+        ],
+        "smoke/pasa_minimal": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\pasa_minimal_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6246234874488593,
+            "wall_seconds": 635.014511346817
+          }
+        ],
+        "smoke/pasa_text_control": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\pasa_text_control_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.5810487960266277,
+            "wall_seconds": 655.0132496356964
+          }
+        ],
+        "smoke/radzero_metadata": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\radzero_metadata_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.5979707327855212,
+            "wall_seconds": 658.5353968143463
+          }
+        ],
+        "smoke/text_cosine": [
+          {
+            "run": "sota_alignment_20261009\\runs\\smoke\\text_cosine_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6297601299031504,
+            "wall_seconds": 649.1264002323151
+          }
+        ]
+      }
+    },
+    "sota_alignmentv2_20261009": {
+      "split_sizes": {
+        "train": 438,
+        "val": 63,
+        "test": 124
+      },
+      "split_overlaps": {
+        "train_val": 0,
+        "test_train": 0,
+        "test_val": 0
+      },
+      "groups": {
+        "sota/carzero_metadata": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\carzero_metadata_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7728494623655914,
+            "map": 0.8864247311827957,
+            "biomarker_macro_auc": 0.6526892928137208,
+            "wall_seconds": 15422.957330703735
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\carzero_metadata_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7594086021505375,
+            "map": 0.8797043010752689,
+            "biomarker_macro_auc": 0.6647030227908374,
+            "wall_seconds": 15929.967131137848
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\carzero_metadata_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7768817204301075,
+            "map": 0.8884408602150538,
+            "biomarker_macro_auc": 0.7120432008875944,
+            "wall_seconds": 15911.6785633564
+          }
+        ],
+        "sota/pasa_full": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_full_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.5745056038069482,
+            "wall_seconds": 15569.478323698044
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_full_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.651010606638467,
+            "wall_seconds": 15952.510010957718
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_full_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6193840940873264,
+            "wall_seconds": 15551.161792755127
+          }
+        ],
+        "sota/pasa_minimal": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_minimal_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6201674568915702,
+            "wall_seconds": 15682.239918470383
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_minimal_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.7090818438966321,
+            "wall_seconds": 15919.221115589142
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_minimal_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6576980835240275,
+            "wall_seconds": 15248.485587835312
+          }
+        ],
+        "sota/pasa_text_control": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_text_control_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.5834812296304001,
+            "wall_seconds": 16272.23617362976
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_text_control_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6000255703487968,
+            "wall_seconds": 16645.317979812622
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\pasa_text_control_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7446236559139785,
+            "map": 0.8723118279569892,
+            "biomarker_macro_auc": 0.6265842420197397,
+            "wall_seconds": 16282.227680921555
+          }
+        ],
+        "sota/radzero_metadata": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\radzero_metadata_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.7943548387096774,
+            "map": 0.8971774193548387,
+            "biomarker_macro_auc": 0.6608400220742898,
+            "wall_seconds": 15784.286415815353
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\radzero_metadata_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.8024193548387096,
+            "map": 0.9012096774193549,
+            "biomarker_macro_auc": 0.6504361766983334,
+            "wall_seconds": 15988.151041507721
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\radzero_metadata_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.8077956989247311,
+            "map": 0.9038978494623656,
+            "biomarker_macro_auc": 0.6544066234426645,
+            "wall_seconds": 16213.327937364578
+          }
+        ],
+        "sota/text_cosine": [
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\text_cosine_s42\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.8091397849462365,
+            "map": 0.9045698924731184,
+            "biomarker_macro_auc": 0.704715381792756,
+            "wall_seconds": 15206.176723003387
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\text_cosine_s43\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.786290322580645,
+            "map": 0.8931451612903227,
+            "biomarker_macro_auc": 0.6150584434158518,
+            "wall_seconds": 15259.46200799942
+          },
+          {
+            "run": "sota_alignmentv2_20261009\\runs\\sota\\text_cosine_s44\\attempt_001\\test_metrics.json",
+            "complete": true,
+            "rescored_from_vectors": false,
+            "hit@1": 0.8037634408602151,
+            "map": 0.9018817204301075,
+            "biomarker_macro_auc": 0.6467492430021035,
+            "wall_seconds": 15500.112597465515
+          }
+        ]
+      }
+    }
+  },
+  "recent_runs": [
+    {
+      "method": "carzero_metadata",
+      "seed": 42,
+      "hit@1": 0.7728494623655914,
+      "map": 0.8864247311827957,
+      "biomarker_macro_auc": 0.6526892928137208,
+      "field_auc": {
+        "IDH": 0.8498641304347826,
+        "MGMT": 0.37335526315789475,
+        "1p19Q CODEL": 0.7348484848484849
+      },
+      "prior_top1_agreement": [
+        224,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 117,
+          "2": 7
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 18,
+      "epochs": 30,
+      "unique_validation_map": 19,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "carzero_metadata",
+      "seed": 43,
+      "hit@1": 0.7594086021505375,
+      "map": 0.8797043010752689,
+      "biomarker_macro_auc": 0.6647030227908374,
+      "field_auc": {
+        "IDH": 0.8661684782608695,
+        "MGMT": 0.3930921052631579,
+        "1p19Q CODEL": 0.7348484848484849
+      },
+      "prior_top1_agreement": [
+        198,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 111,
+          "2": 13
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 31,
+          "4": 20
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 28,
+      "epochs": 30,
+      "unique_validation_map": 16,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "carzero_metadata",
+      "seed": 44,
+      "hit@1": 0.7768817204301075,
+      "map": 0.8884408602150538,
+      "biomarker_macro_auc": 0.7120432008875944,
+      "field_auc": {
+        "IDH": 0.8505434782608695,
+        "MGMT": 0.4901315789473684,
+        "1p19Q CODEL": 0.7954545454545454
+      },
+      "prior_top1_agreement": [
+        206,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 115,
+          "2": 9
+        },
+        "1p19Q CODEL": {
+          "1": 55,
+          "0": 1
+        },
+        "MGMT": {
+          "5": 36,
+          "4": 15
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 25,
+      "epochs": 30,
+      "unique_validation_map": 13,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_full",
+      "seed": 42,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.5745056038069482,
+      "field_auc": {
+        "IDH": 0.6973505434782609,
+        "MGMT": 0.45230263157894735,
+        "1p19Q CODEL": 0.5738636363636364
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 2,
+      "epochs": 30,
+      "unique_validation_map": 2,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_full",
+      "seed": 43,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.651010606638467,
+      "field_auc": {
+        "IDH": 0.8756793478260869,
+        "MGMT": 0.5394736842105263,
+        "1p19Q CODEL": 0.5378787878787878
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_full",
+      "seed": 44,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.6193840940873264,
+      "field_auc": {
+        "IDH": 0.7224864130434783,
+        "MGMT": 0.5296052631578947,
+        "1p19Q CODEL": 0.6060606060606061
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_minimal",
+      "seed": 42,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.6201674568915702,
+      "field_auc": {
+        "IDH": 0.6946331521739131,
+        "MGMT": 0.5427631578947368,
+        "1p19Q CODEL": 0.6231060606060606
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_minimal",
+      "seed": 43,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.7090818438966321,
+      "field_auc": {
+        "IDH": 0.8271059782608695,
+        "MGMT": 0.569078947368421,
+        "1p19Q CODEL": 0.7310606060606061
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_minimal",
+      "seed": 44,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.6576980835240275,
+      "field_auc": {
+        "IDH": 0.8563179347826086,
+        "MGMT": 0.4917763157894737,
+        "1p19Q CODEL": 0.625
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_text_control",
+      "seed": 42,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.5834812296304001,
+      "field_auc": {
+        "IDH": 0.6674592391304348,
+        "MGMT": 0.5148026315789473,
+        "1p19Q CODEL": 0.5681818181818182
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_text_control",
+      "seed": 43,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.6000255703487968,
+      "field_auc": {
+        "IDH": 0.779891304347826,
+        "MGMT": 0.4292763157894737,
+        "1p19Q CODEL": 0.5909090909090909
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "pasa_text_control",
+      "seed": 44,
+      "hit@1": 0.7446236559139785,
+      "map": 0.8723118279569892,
+      "biomarker_macro_auc": 0.6265842420197397,
+      "field_auc": {
+        "IDH": 0.7713994565217391,
+        "MGMT": 0.5098684210526315,
+        "1p19Q CODEL": 0.5984848484848485
+      },
+      "prior_top1_agreement": [
+        231,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 124
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 1,
+      "epochs": 30,
+      "unique_validation_map": 1,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "radzero_metadata",
+      "seed": 42,
+      "hit@1": 0.7943548387096774,
+      "map": 0.8971774193548387,
+      "biomarker_macro_auc": 0.6608400220742898,
+      "field_auc": {
+        "IDH": 0.8009510869565217,
+        "MGMT": 0.5016447368421053,
+        "1p19Q CODEL": 0.6799242424242424
+      },
+      "prior_top1_agreement": [
+        206,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 103,
+          "2": 21
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 47,
+          "4": 4
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 15,
+      "epochs": 30,
+      "unique_validation_map": 21,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "radzero_metadata",
+      "seed": 43,
+      "hit@1": 0.8024193548387096,
+      "map": 0.9012096774193549,
+      "biomarker_macro_auc": 0.6504361766983334,
+      "field_auc": {
+        "IDH": 0.8271059782608695,
+        "MGMT": 0.41776315789473684,
+        "1p19Q CODEL": 0.7064393939393939
+      },
+      "prior_top1_agreement": [
+        199,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 100,
+          "2": 24
+        },
+        "1p19Q CODEL": {
+          "1": 52,
+          "0": 4
+        },
+        "MGMT": {
+          "5": 47,
+          "4": 4
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 11,
+      "epochs": 30,
+      "unique_validation_map": 18,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "radzero_metadata",
+      "seed": 44,
+      "hit@1": 0.8077956989247311,
+      "map": 0.9038978494623656,
+      "biomarker_macro_auc": 0.6544066234426645,
+      "field_auc": {
+        "IDH": 0.8491847826086957,
+        "MGMT": 0.3848684210526316,
+        "1p19Q CODEL": 0.7291666666666666
+      },
+      "prior_top1_agreement": [
+        202,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 101,
+          "2": 23
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 45,
+          "4": 6
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 14,
+      "epochs": 30,
+      "unique_validation_map": 19,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "text_cosine",
+      "seed": 42,
+      "hit@1": 0.8091397849462365,
+      "map": 0.9045698924731184,
+      "biomarker_macro_auc": 0.704715381792756,
+      "field_auc": {
+        "IDH": 0.8800951086956522,
+        "MGMT": 0.41776315789473684,
+        "1p19Q CODEL": 0.8162878787878788
+      },
+      "prior_top1_agreement": [
+        210,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 107,
+          "2": 17
+        },
+        "1p19Q CODEL": {
+          "1": 52,
+          "0": 4
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 16,
+      "epochs": 30,
+      "unique_validation_map": 13,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "text_cosine",
+      "seed": 43,
+      "hit@1": 0.786290322580645,
+      "map": 0.8931451612903227,
+      "biomarker_macro_auc": 0.6150584434158518,
+      "field_auc": {
+        "IDH": 0.8169157608695652,
+        "MGMT": 0.30098684210526316,
+        "1p19Q CODEL": 0.7272727272727273
+      },
+      "prior_top1_agreement": [
+        204,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 104,
+          "2": 20
+        },
+        "1p19Q CODEL": {
+          "1": 49,
+          "0": 7
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 12,
+      "epochs": 30,
+      "unique_validation_map": 12,
+      "metrics_recomputed": true
+    },
+    {
+      "method": "text_cosine",
+      "seed": 44,
+      "hit@1": 0.8037634408602151,
+      "map": 0.9018817204301075,
+      "biomarker_macro_auc": 0.6467492430021035,
+      "field_auc": {
+        "IDH": 0.8288043478260869,
+        "MGMT": 0.4144736842105263,
+        "1p19Q CODEL": 0.696969696969697
+      },
+      "prior_top1_agreement": [
+        211,
+        231
+      ],
+      "prediction_counts": {
+        "IDH": {
+          "3": 104,
+          "2": 20
+        },
+        "1p19Q CODEL": {
+          "1": 56
+        },
+        "MGMT": {
+          "5": 51
+        }
+      },
+      "label_counts": {
+        "IDH": {
+          "3": 92,
+          "2": 32
+        },
+        "1p19Q CODEL": {
+          "1": 44,
+          "0": 12
+        },
+        "MGMT": {
+          "4": 19,
+          "5": 32
+        }
+      },
+      "selected_epoch_from_history": 6,
+      "epochs": 30,
+      "unique_validation_map": 12,
+      "metrics_recomputed": true
+    }
+  ],
+  "recent_means": {
+    "carzero_metadata": {
+      "hit@1": {
+        "mean": 0.7697132616487455,
+        "seed_sd": 0.00914900441606732
+      },
+      "map": {
+        "mean": 0.8848566308243727,
+        "seed_sd": 0.004574502208033607
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6764785054973842,
+        "seed_sd": 0.0313802182216695
+      }
+    },
+    "pasa_full": {
+      "hit@1": {
+        "mean": 0.7446236559139785,
+        "seed_sd": 0.0
+      },
+      "map": {
+        "mean": 0.8723118279569894,
+        "seed_sd": 1.3597399555105182e-16
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6149667681775806,
+        "seed_sd": 0.03844331464256641
+      }
+    },
+    "pasa_minimal": {
+      "hit@1": {
+        "mean": 0.7446236559139785,
+        "seed_sd": 0.0
+      },
+      "map": {
+        "mean": 0.8723118279569894,
+        "seed_sd": 1.3597399555105182e-16
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6623157947707433,
+        "seed_sd": 0.04463669451236298
+      }
+    },
+    "pasa_text_control": {
+      "hit@1": {
+        "mean": 0.7446236559139785,
+        "seed_sd": 0.0
+      },
+      "map": {
+        "mean": 0.8723118279569894,
+        "seed_sd": 1.3597399555105182e-16
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6033636806663122,
+        "seed_sd": 0.021744531602860967
+      }
+    },
+    "radzero_metadata": {
+      "hit@1": {
+        "mean": 0.8015232974910393,
+        "seed_sd": 0.006765084619418229
+      },
+      "map": {
+        "mean": 0.9007616487455197,
+        "seed_sd": 0.0033825423097091144
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6552276074050959,
+        "seed_sd": 0.005250286720897203
+      }
+    },
+    "text_cosine": {
+      "hit@1": {
+        "mean": 0.7997311827956989,
+        "seed_sd": 0.011946497872736078
+      },
+      "map": {
+        "mean": 0.8998655913978495,
+        "seed_sd": 0.005973248936367948
+      },
+      "biomarker_macro_auc": {
+        "mean": 0.6555076894035704,
+        "seed_sd": 0.045465640183610344
+      }
+    }
+  },
+  "paired_patient_bootstrap": {
+    "carzero_metadata_minus_pasa_full": {
+      "hit@1_difference": 0.02508960573476702,
+      "percentile_95_interval": [
+        -0.007616487455197142,
+        0.0600358422939068
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    },
+    "pasa_full_minus_pasa_full": {
+      "hit@1_difference": 0.0,
+      "percentile_95_interval": [
+        0.0,
+        0.0
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    },
+    "pasa_minimal_minus_pasa_full": {
+      "hit@1_difference": 0.0,
+      "percentile_95_interval": [
+        0.0,
+        0.0
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    },
+    "pasa_text_control_minus_pasa_full": {
+      "hit@1_difference": 0.0,
+      "percentile_95_interval": [
+        0.0,
+        0.0
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    },
+    "radzero_metadata_minus_pasa_full": {
+      "hit@1_difference": 0.05689964157706093,
+      "percentile_95_interval": [
+        0.012544802867383511,
+        0.10259856630824374
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    },
+    "text_cosine_minus_pasa_full": {
+      "hit@1_difference": 0.05510752688172043,
+      "percentile_95_interval": [
+        0.016577060931899642,
+        0.09453405017921146
+      ],
+      "patients": 124,
+      "resamples": 10000,
+      "scope": "exploratory; conditional on fitted seeds and fixed test split; no multiplicity correction"
+    }
+  },
+  "recent_sources_match_b4cfc9c": {
+    "train_semantic_alignment.py": true,
+    "semantic_evaluation.py": true,
+    "experiment_model.py": true,
+    "experiment_dataset.py": true,
+    "dataset.py": true,
+    "semantic_graph_visualize.py": true,
+    "tools/run_pasa_server.py": true,
+    "utils/bootstrap_semantic_5seed.py": true,
+    "recent_alignment.py": true,
+    "train_recent_alignment.py": true,
+    "tools/run_recent_alignment.py": true,
+    "tools/build_alignment_text_cache.py": true,
+    "tools/summarize_recent_alignment.py": true,
+    "third_party/carzero/dqn.py": true,
+    "third_party/carzero/transformer_decoder.py": true,
+    "third_party/radzero/similarity.py": true,
+    "third_party/radzero/dinov2_blocks.py": true,
+    "third_party/ALIGNMENT_SOURCES.json": true
+  }
+}

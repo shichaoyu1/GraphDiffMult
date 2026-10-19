@@ -24,3 +24,7 @@ markdowm/
 # Notebook / logs
 *.ipynb_checkpoints
 *.log
+
+# Local returned patient-level evidence archive (keep outside code publication)
+revision/pasa_review_20261009/stage1_snapshot_20261019/*.zip
+revision/pasa_review_20261009/stage1_snapshot_20261019/manifest.json
