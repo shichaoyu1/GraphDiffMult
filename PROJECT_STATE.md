@@ -1,6 +1,18 @@
 # PASA 项目交接
 
+## 2026-10-20 修复实现与新探索协议
+
+已核查FeTS标准1=NCR、2=ED、4=ET；UTSW人工分割3/5未找到官方数值字典，用户确认无额外说明。新pilot明确将原始1/2/3/4/5作为独立匿名空间分箱，不合并或命名组织类别。核查记录在 `revision/pasa_review_20261009/LABEL_DEFINITIONS_20261020.md`。
+
+新实现 `pasa_region_inputs.py` + `pasa_repair_pilot.py`：最大病灶面积切片采样、resize后presence、空区域不进CNN/BN/损失汇总，可选图屏蔽缺失行列；全分割空者所有方案共同冻结排除。旧训练入口保持原证据定义。
+
+新入口 `tools/run_pasa_repair_pilot.py`、后台入口 `tools/launch_pasa_repair.sh`，说明见 `PASA_REPAIR_PILOT_RUN.md`。协议pasa_repair_pilot_v1：全局ROI/原始分区汇总×集合/逐字段监督4组，同CNN参数、患者、词表、单向患者级监督，无图扩散中心损失，固定且隔离验证随机状态，AUROC选模并保存best-map和last。smoke四组各1轮、最多train/val各32人；pilot四组各10轮、seed42，要求已完成匹配smoke。均不评价test，不下载HF。
+
+本地58项测试通过，包含真实临时NIfTI四组单轮CPU流程；这些是合成验证，不是UTSW训练结果。尚未在AutoDL执行新修复实验。后续按smoke→核对coverage/验证重放→pilot推进，真实成绩不可预断。
+
 ## 2026-10-19 最新阶段状态（以下历史记录保留）
+
+最新分割审计返回：`output/20261019_AAAI_review/pasa_region_audit_20261019_173123`，501例记录与前次一致。34例全空输入分解为：25例采样仅有未处理label 3，6例有全体积病灶但中间切片无阳性，3例当前分割全体积为空。95例含label 3，其中70例同时含3和4，不能直接3→4；另3例含1–2个label 5体素。形状/affine匹配均通过。见 `revision/pasa_review_20261009/REGION_AUDIT_FINDINGS_20261019.md`。下一步输入规则修订前需核实manual/FeTS标签字典；尚未改训练代码或新训练。
 
 最新返回：`output/20261019_AAAI_review/pasa_diagnostics_20261019_165637_406586` 已完整跑完。12份验证评分已重算，3个checkpoint哈希一致；随机推理宏AUROC极差约0.0110–0.0224，固定seed精确重放。关键新增问题：训练31/438、验证3/63病例三个区域输入全空。真实梯度探测仅同一组6人，不可当18个独立患者。决策见 `revision/pasa_review_20261009/RETURNED_DIAGNOSTICS_20261019.md`；训练前先用 `tools/audit_pasa_region_inputs.py` 核查完整分割标签与采样切片，暂不臆测编码映射。
 
