@@ -1,2 +1,3 @@
 tools/launch_pasa_diagnostics.sh text eol=lf
 tools/launch_pasa_repair.sh text eol=lf
+tools/launch_pasa_repair_repeats.sh text eol=lf

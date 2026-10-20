@@ -63,3 +63,39 @@ python -B tools/run_pasa_repair_pilot.py --stage pilot --dry-run
 新目录保存protocol、输入manifest、共同排除、词表、各方法history、每轮验证分数、best_auc.pt/best_map.pt/last.pt、频率基线、summary和complete。已有目录拒绝覆盖，失败留下完整attempt证据；需新目录重试，不静默续训。
 
 本轮不使用旧test重新选方案。若区域输入或字段监督在验证上无稳定增量，应保留负结果并简化路线；单seed开发观察不构成最终确认。最终确认还需预先锁定的独立数据/外部评估。
+
+## 补充训练种子43、44
+
+seed42已完成四组10轮。新入口只复用该次protocol、inputs和词表，不重新prepare或重复smoke，不修改任何科学训练源码。新调度器记录参考材料SHA256、当前git提交和自身源码SHA256；每个新seed仅改变训练随机性。
+
+默认参考服务器目录为 `output/pasa_repair_pilot_20261020_095259_432520`。同一环境执行：
+
+```bash
+cd /root/autodl-tmp/repo/GraphDiffMult
+git pull --ff-only
+bash tools/launch_pasa_repair_repeats.sh
+```
+
+依次执行seed43的四组、seed44的四组，共8个新运行；各10轮、batch2、435train/63val、原AUROC选模等参数全部继承参考协议。无测试集评分或HF下载。不会重跑seed42。日志和新结果目录由启动器打印，可以关闭终端。
+
+原四组GPU训练累计约6.47小时，因此两个新seed可参考约13小时，另加输入预检和磁盘读取；这是按上次实测估计，不是完成时间承诺。
+
+实际路径不同可追加 `--reference /实际路径/seed42目录`。查看计划而不加载影像或训练：
+
+```bash
+python -B tools/repeat_pasa_repair_pilot.py --reference output/pasa_repair_pilot_20261020_095259_432520 --dry-run
+```
+
+完成标志为新目录根部complete.json和日志COMPLETE。输出包含seed_43/attempt_001、seed_44/attempt_001与汇总，汇总纳入原seed42共12个运行。
+
+### 失败恢复
+
+失败会保留attempt及failed.json，停止队列。当前模型文件没有完整优化器/随机状态，故不从last.pt继续。恢复时已完成并核验通过的seed跳过；未完成seed在新attempt从四组开始，完整保留旧attempt。
+
+```bash
+bash tools/launch_pasa_repair_repeats.sh --resume --out output/实际的pasa_repair_repeats目录
+```
+
+恢复时校验科学源码、参考材料、元数据、分割、图像stat、已完成attempt的输入及词表，发生变化则停止；不会修改旧哈希来绕过冻结。并发恢复由.run.lock阻止，普通失败自动释放锁。若进程被强制杀死遗留锁，先核实锁内PID确已停止，再处理该锁文件，不在活动进程上重复启动。
+
+三个seed共用开发验证集，仅用于检验训练随机性与配对方向，不表示三个独立验证队列。结果返回前不增加模块或延长预算。

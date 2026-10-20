@@ -2,6 +2,10 @@
 
 ## 2026-10-20 修复实现与新探索协议
 
+已准备补seed43/44的独立调度器：`tools/repeat_pasa_repair_pilot.py`，后台入口 `bash tools/launch_pasa_repair_repeats.sh`。复用已完成seed42 pilot的protocol/inputs/vocab及11项科学源码哈希，仅改变训练seed，共8个新10轮运行，原训练runner保持不变，不重复smoke。支持校验完成seed后跳过、失败新attempt重试，不从last伪装续训。尚未在服务器启动这8个运行。
+
+最新返回 `output/20261019_AAAI_review/pasa_repair_pilot_20261020_095259_432520`：四组各10轮seed42完成，435train/63val，保留病例全有有效区域；40份逐轮指标重算通过，11源码hash与86a8e6f一致，12检查点选模正确、验证重放一致。整块mass/field宏验证AUROC=.7507/.7937，分区mass/field=.7173/.7734。单seed支持检查逐字段目标，不支持分区优势；四组1p19Q首位仍全为多数类。见 `revision/pasa_review_20261009/REPAIR_PILOT_RESULTS_20261020.md`。下一步优先同协议补seed43/44，暂不加图扩散或延长训练；尚无独立test/外部确认。
+
 已核查FeTS标准1=NCR、2=ED、4=ET；UTSW人工分割3/5未找到官方数值字典，用户确认无额外说明。新pilot明确将原始1/2/3/4/5作为独立匿名空间分箱，不合并或命名组织类别。核查记录在 `revision/pasa_review_20261009/LABEL_DEFINITIONS_20261020.md`。
 
 新实现 `pasa_region_inputs.py` + `pasa_repair_pilot.py`：最大病灶面积切片采样、resize后presence、空区域不进CNN/BN/损失汇总，可选图屏蔽缺失行列；全分割空者所有方案共同冻结排除。旧训练入口保持原证据定义。
