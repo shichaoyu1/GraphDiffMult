@@ -1,5 +1,17 @@
 # PASA 项目交接
 
+## 2026-10-21 三训练种子返回并完成复核
+
+新增结果 `output/20261019_AAAI_review/pasa_repair_repeats_20261020_171817_445198`：seed43/44各4组10轮完成，共8新run；与原seed42合计12run、120份逐轮验证。逐患者指标重算及直接pairwise AUROC复核通过，5参考hash/11科学源码/36检查点/198严格JSON核对通过，未评价test。各组409056参数、2180步，共435train/63val，无保留病例全空输入；分区每轮1156视图、整块435，不能声称等FLOPs。
+
+选中模型验证宏AUROC（3训练seed均值±SD）：整块mass .7531±.0110、整块field .8058±.0141、分区mass .7142±.0595、分区field .7991±.0246。逐字段相对集合六组配对均改善（整块均+.0526，分区+.0849）；分区相对整块field方向为负/正/负，均−.0067，没有稳定分区增益。分区field的1p19Q AUROC三seed均低于整块field；12选中模型中10个仍全预测1p19Q多数类，另2个少数类召回仅1/9。见 `revision/pasa_review_20261009/REPAIR_REPEATS_RESULTS_20261021.md` 与 `repair_repeats_audit_20261021/summary.json`。
+
+方法定位复核：当前field模型就是余弦归一化原型头的5任务26类多任务分类器，没有独立文本语义输入。当前结果支持患者属性预测/排序和监督修正，不证明语义锚点必要、区域病理对应或SOTA。先保留整块field简洁参照，检查仅分割统计的替代解释，不恢复图/扩散/中心损失。三seed共用开发验证集，不能当三独立队列；历史test已参与开发，最终还需未参与开发的确认数据。
+
+已准备CPU分割统计探针 `tools/run_pasa_shape_probe.py`，一键 `bash tools/launch_pasa_shape_probe.sh`，说明 `PASA_SHAPE_PROBE_RUN.md`。固定11个resize后mask统计、train-only标准化、3字段独立L2逻辑回归，不加载MRI/不调参。参考5文件/原始TSV/标签源码哈希和train435重建词表严格核验；保存train_fit后才处理val63评分。7项合成测试及独立代码复审通过，真实探针尚未执行（本地无原始TSV）。准备阶段发现旧train_prior_score_records实际是test124评分，已放弃该标签来源并删除相关读取逻辑，未用于真实拟合；改由原始TSV按训练ID取标签。固定协议见 `SHAPE_PROBE_PROTOCOL_20261021.md`。
+
+离线聚合报告 `revision/pasa_review_20261009/repair_repeats_audit_20261021/report.html` 已生成；canonical校验/打包/结构检查通过，环境无对应Chromium headless-shell，浏览器展示未核验，保留完整语义表格。原始结果、患者级输出和论文正文未改。
+
 ## 2026-10-20 修复实现与新探索协议
 
 已准备补seed43/44的独立调度器：`tools/repeat_pasa_repair_pilot.py`，后台入口 `bash tools/launch_pasa_repair_repeats.sh`。复用已完成seed42 pilot的protocol/inputs/vocab及11项科学源码哈希，仅改变训练seed，共8个新10轮运行，原训练runner保持不变，不重复smoke。支持校验完成seed后跳过、失败新attempt重试，不从last伪装续训。尚未在服务器启动这8个运行。

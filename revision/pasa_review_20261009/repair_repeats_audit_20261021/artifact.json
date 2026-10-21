@@ -1,0 +1,700 @@
+{
+  "surface": "report",
+  "manifest": {
+    "version": 1,
+    "surface": "report",
+    "title": "PASA Repair Repeat Results",
+    "description": "PASA 修复实验三个训练 seed 的验证结果、完整性和证据边界。",
+    "generatedAt": "2026-10-21T01:35:53.115382+00:00",
+    "sources": [
+      {
+        "id": "audit",
+        "label": "三 seed 修复实验聚合审计",
+        "path": "revision/pasa_review_20261009/repair_repeats_audit_20261021/summary.json",
+        "query": {
+          "engine": "SQLite JSON1 + Python",
+          "language": "sql",
+          "description": "SQLite JSON1 实际读取已重算的审计摘要；Python 依 build_report.py 提取、命名和格式化聚合行。",
+          "sql": "SELECT json_extract(:summary_json, '$') AS audited_summary;",
+          "bindings": {
+            "summary_json": "UTF-8 text of revision/pasa_review_20261009/repair_repeats_audit_20261021/summary.json"
+          },
+          "transformation": "build_report.py；不重新训练或更改原审计数值。",
+          "tables_used": [
+            "repair_repeats_audit_20261021/summary.json"
+          ],
+          "filters": [
+            "训练 seed 42、43、44",
+            "共同训练 435 人、开发验证 63 人",
+            "各模型按验证宏 AUROC 首次严格最大值选模",
+            "本轮无 test 评分"
+          ],
+          "metric_definitions": {
+            "auc": "每字段用两个候选分数之差计算二分类 AUROC，再等权平均三个分子字段。",
+            "seed_sd": "同一验证集上，三个训练 seed 的样本标准差（ddof=1）；不是患者置信区间。",
+            "paired_difference": "同一训练 seed、同一验证患者和标签的两个已选模型宏 AUROC 之差。",
+            "positive_recall": "默认两个候选中分数更大者为预测类别；共缺失（co-deleted）真阳性数 / 9。"
+          }
+        }
+      },
+      {
+        "id": "model",
+        "label": "修复 pilot 模型与监督定义",
+        "path": "pasa_repair_pilot.py",
+        "query": {
+          "language": "python",
+          "description": "RepairAlignmentModel、fieldwise_loss；原型归一化余弦头与逐字段交叉熵。",
+          "tables_used": [
+            "pasa_repair_pilot.py"
+          ],
+          "filters": [
+            "冻结科学源码版本 86a8e6f",
+            "原始分区编号 1/2/3/4/5 不赋组织学含义"
+          ]
+        }
+      }
+    ],
+    "charts": [
+      {
+        "id": "macro",
+        "title": "四种方案在三个训练 seed 下的验证宏 AUROC",
+        "subtitle": "同一开发验证集 63 人；每根柱为各自按预设规则选中的模型。",
+        "showDescription": true,
+        "type": "bar",
+        "intent": "comparison",
+        "question": "逐字段监督的改善和分区输入的增益能否跨训练 seed 重复？",
+        "rationale": "训练 seed 是离散重复，采用分组柱，不连成时间趋势。",
+        "comparisonContext": {
+          "grain": "每方案每训练 seed",
+          "denominator": "同一验证集 63 人，三个已知分子字段",
+          "unit": "AUROC（0–1）",
+          "baseline": "各方案共同数据、标签、轮数和选模规则"
+        },
+        "dataset": "methods",
+        "sourceId": "audit",
+        "layout": "full",
+        "valueFormat": "number",
+        "encodings": {
+          "x": {
+            "field": "method",
+            "type": "nominal",
+            "label": "输入与监督方案"
+          },
+          "y": {
+            "fields": [
+              "seed42",
+              "seed43",
+              "seed44"
+            ],
+            "type": "quantitative",
+            "label": "验证宏 AUROC"
+          }
+        },
+        "palette": {
+          "kind": "categorical"
+        },
+        "legend": {
+          "position": "bottom",
+          "sort": "spec",
+          "title": "训练随机性"
+        },
+        "labels": {
+          "values": "all"
+        },
+        "settings": {
+          "groupMode": "grouped",
+          "categoryLabelPolicy": "wrap",
+          "sort": "none"
+        },
+        "referenceLines": [
+          {
+            "axis": "y",
+            "value": 0.5,
+            "label": "常数分数 AUROC 0.5",
+            "color": "neutral",
+            "lineStyle": "dashed"
+          }
+        ]
+      }
+    ],
+    "tables": [
+      {
+        "id": "macro_detail",
+        "title": "各方案验证宏 AUROC",
+        "dataset": "methods",
+        "sourceId": "audit",
+        "defaultSort": {
+          "field": "method",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "method",
+            "label": "方案",
+            "type": "text"
+          },
+          {
+            "field": "seed42_display",
+            "label": "seed 42",
+            "type": "text"
+          },
+          {
+            "field": "seed43_display",
+            "label": "seed 43",
+            "type": "text"
+          },
+          {
+            "field": "seed44_display",
+            "label": "seed 44",
+            "type": "text"
+          },
+          {
+            "field": "mean_sd",
+            "label": "均值 ± 训练 SD",
+            "type": "text"
+          },
+          {
+            "field": "selection_epochs",
+            "label": "选中轮次 42/43/44",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "paired_detail",
+        "title": "同 seed 配对宏 AUROC 差值",
+        "dataset": "pairs",
+        "sourceId": "audit",
+        "defaultSort": {
+          "field": "comparison",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "comparison",
+            "label": "比较方向",
+            "type": "text"
+          },
+          {
+            "field": "seed42",
+            "label": "seed 42",
+            "type": "text"
+          },
+          {
+            "field": "seed43",
+            "label": "seed 43",
+            "type": "text"
+          },
+          {
+            "field": "seed44",
+            "label": "seed 44",
+            "type": "text"
+          },
+          {
+            "field": "mean",
+            "label": "平均差值",
+            "type": "text"
+          },
+          {
+            "field": "positive",
+            "label": "提高的 seed 数",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "field_detail",
+        "title": "各字段验证 AUROC：均值 ± 训练 SD",
+        "dataset": "fields",
+        "sourceId": "audit",
+        "defaultSort": {
+          "field": "method",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "method",
+            "label": "方案",
+            "type": "text"
+          },
+          {
+            "field": "IDH",
+            "label": "IDH（62 人）",
+            "type": "text"
+          },
+          {
+            "field": "MGMT",
+            "label": "MGMT（27 人）",
+            "type": "text"
+          },
+          {
+            "field": "1p19Q CODEL",
+            "label": "1p19Q（31 人）",
+            "type": "text"
+          }
+        ]
+      },
+      {
+        "id": "codel_detail",
+        "title": "1p19Q 默认决策与共缺失召回",
+        "dataset": "codel",
+        "sourceId": "audit",
+        "defaultSort": {
+          "field": "seed",
+          "direction": "asc"
+        },
+        "columns": [
+          {
+            "field": "seed",
+            "label": "训练 seed",
+            "type": "text"
+          },
+          {
+            "field": "method",
+            "label": "方案",
+            "type": "text"
+          },
+          {
+            "field": "auc",
+            "label": "AUROC",
+            "type": "text"
+          },
+          {
+            "field": "predicted_positive",
+            "label": "预测共缺失人数",
+            "type": "text"
+          },
+          {
+            "field": "positive_recall",
+            "label": "共缺失召回",
+            "type": "text"
+          }
+        ]
+      }
+    ],
+    "cards": [],
+    "blocks": [
+      {
+        "id": "title",
+        "type": "markdown",
+        "body": "# PASA Repair Repeat Results"
+      },
+      {
+        "id": "summary",
+        "type": "markdown",
+        "body": "## 可以推进监督设计，区域优势仍未成立\n\n**已核实：**新增两个 seed 的运行完整，合并后共 12 个模型。逐字段监督在整块与分区的六组配对中均提高宏 AUROC，平均差值分别为 **+0.0526** 和 **+0.0849**。\n\n**研究判断：**保留逐字段监督继续开发；目前不宜用这批结果恢复“分区更优”或区域病理对齐的主张。这些是同一开发验证集上的模型选择结果，尚非独立确认。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "scope",
+        "type": "markdown",
+        "body": "## 比较对象与分母保持一致\n\n共同训练 **435 人**、开发验证 **63 人**；三个 seed 仅改变训练随机性，没有形成三批独立患者。每组 10 轮、2,180 次优化、409,056 个参数，候选词表和缺失标签掩码一致。分区方案编码更多视图，参数和步数相同不等于计算量相同。\n\n**主要终点：**IDH、MGMT、1p19Q 三个字段 AUROC 的等权平均；已知标签分别为 62、27、31 人。各组按验证宏 AUROC 首次达到严格最大值的轮次选模。表中的“±”只表示三个训练 seed 的样本标准差。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "macro_finding",
+        "type": "markdown",
+        "body": "## 逐字段监督的改善可以跨训练 seed 重复\n\n下图逐组展示三个 seed 的已选验证 AUROC，便于同时看效果和训练波动；数值越高，患者间排序区分能力越好。整块逐字段的均值最高，但这不能证明它对新患者更优。分区集合的波动最大，说明仅看一次运行容易误判。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "macro_chart",
+        "type": "chart",
+        "chartId": "macro",
+        "layout": "full"
+      },
+      {
+        "id": "macro_table",
+        "type": "table",
+        "tableId": "macro_detail",
+        "layout": "full"
+      },
+      {
+        "id": "paired_finding",
+        "type": "markdown",
+        "body": "## 分区相对整块的方向不稳定\n\n在逐字段监督下，分区相对整块的差值依次为 **-0.0203、+0.0202、-0.0199**；两个 seed 下降、一个上升。当前证据支持“尚未观察到稳定增益”，不足以判定分区设计在所有条件下无效。差值均来自各自按同一规则选中的模型，仍受小验证集及选模波动影响。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "paired_table",
+        "type": "table",
+        "tableId": "paired_detail",
+        "layout": "full"
+      },
+      {
+        "id": "field_finding",
+        "type": "markdown",
+        "body": "## 总体改善不等于每个分子字段全面改善\n\n逐字段监督对 MGMT 的改善在两种输入和三个 seed 中方向一致；其他字段仍有差异。分区逐字段的 1p19Q 平均 AUROC 低于整块逐字段，不能事后只挑有利字段来解释分区价值。MGMT 只有 27 名已知标签患者，字段差异应作为开发观察，不能外推成确定的生物学机制。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "fields_table",
+        "type": "table",
+        "tableId": "field_detail",
+        "layout": "full"
+      },
+      {
+        "id": "threshold_finding",
+        "type": "markdown",
+        "body": "## 1p19Q 的默认预测仍偏向多数类\n\n**10/12 个已选模型**把 31 名已知患者全部判为 non co-deleted。仅 seed 43 的两个逐字段模型各预测出 1 名共缺失患者，少数类召回均为 **1/9**。较高 AUROC 表示分数排序有信息，并不表示默认决策边界或少数类识别已解决。阈值或校准如需调整，应另定开发协议，不能用旧 test 选阈值。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "codel_table",
+        "type": "table",
+        "tableId": "codel_detail",
+        "layout": "full"
+      },
+      {
+        "id": "integrity",
+        "type": "markdown",
+        "body": "## 指标和选模记录已交叉核对\n\n从原始患者分数重算了 **120 份逐轮记录**和 **12 份已选模型记录**；检索指标、分字段和宏 AUROC 与保存值一致。每轮 189 条患者—字段记录中，120 条有已知标签、69 条因缺失跳过；缺失没有当作阴性。标签与掩码签名一致，原始分数有限，AUROC 另以正负患者逐对比较交叉核算；首次最大值选模通过。保留的 498 名患者没有全空区域输入。",
+        "sourceId": "audit"
+      },
+      {
+        "id": "model_scope",
+        "type": "markdown",
+        "body": "## 本轮逐字段模型已经属于多任务分类\n\n影像表征和可学习原型归一化后计算余弦分数；单正样本字段的损失就是字段内交叉熵，再对患者已知字段取平均。没有独立文本编码器、语义描述或区域病理真值输入。因此不需要再训练一个数学等价的“普通分类器”来制造对照。本轮可以支持患者级监督下的分子预测与排序，仍不能证明原型名称赋予了额外语义信息。",
+        "sourceId": "model"
+      },
+      {
+        "id": "limits",
+        "type": "markdown",
+        "body": "## 这批实验仍属于开发证据\n\n- 三个训练 seed 共用同一小验证集；这里没有做显著性检验，标准差也不是泛化误差区间。\n- 输入、骨干、损失和选模均较历史版本改变，不能将全部变化归因于单个修复，也不能与旧 test 指标直接作提升比较。\n- 旧 test 已参与历史开发决策；本轮没有 test 评分，最终确认需另有未参与这些决策的数据。\n- 人工分割属于模型可用输入。原始编号 3/5 的组织学含义未知，患者元数据也不是区域组织病理参考标准。\n- 本地审计读取返回产物，没有重新读取服务器全部 MRI 体素；MRI 原始体素未作完整内容哈希。"
+      },
+      {
+        "id": "next",
+        "type": "markdown",
+        "body": "## 下一步先排除分割形态这一替代解释\n\n**已准备，真实实验尚未运行：**分割统计探针已实现，7 项合成测试和独立代码复审通过；尚无真实患者探针成绩。本地缺少原始元数据 TSV，下一步在 AutoDL 用 CPU 执行 `bash tools/launch_pasa_shape_probe.sh`。\n\n探针固定使用 11 项输入：resize 后前景体素总量、五个原始标签的前景比例和五个 presence 指示，不读取 MRI 强度；仅在训练集拟合标准化和三个分子字段的 L2 逻辑回归。入口会核验原始元数据 TSV 哈希、五份参考产物哈希、标签源码和词表身份。它用于检查患者级分割统计是否已能预测分子状态；与 CNN 的监督任务及模型条件不同，不能将两者分差直接解释为 MRI 强度的增量，也不能当作同条件消融。\n\n当前优先保留整块逐字段作为简单主参考，同时保存分区未获得稳定增益的结果。在替代解释和独立确认路径明确之前，不恢复图、扩散或中心损失。"
+      },
+      {
+        "id": "questions",
+        "type": "markdown",
+        "body": "## 后续证据需要回答的两个问题\n\n1. 相同标签和输入条件下，MRI 强度相对分割形态是否提供额外可重复的信息？\n2. 冻结方案在未参与开发的新患者或独立队列上是否仍成立？\n\n若保留区域病理对应的论文主张，还需要粒度匹配、来源独立的空间病理参考证据；现有患者元数据不能补足这一点。"
+      }
+    ]
+  },
+  "snapshot": {
+    "version": 1,
+    "generatedAt": "2026-10-21T01:35:53.115382+00:00",
+    "status": "ready",
+    "datasets": {
+      "methods": [
+        {
+          "order": 0,
+          "method": "整块 ROI＋集合监督",
+          "seed42": 0.7507111168041121,
+          "seed43": 0.7651042429122139,
+          "seed44": 0.7435918159046179,
+          "seed42_display": "0.7507",
+          "seed43_display": "0.7651",
+          "seed44_display": "0.7436",
+          "mean_sd": "0.7531 ± 0.0110",
+          "mean": 0.7531357252069814,
+          "sd": 0.01095925058431163,
+          "selection_epochs": "6 / 5 / 7",
+          "train_patients": 435,
+          "validation_patients": 63,
+          "epochs_per_run": 10,
+          "parameter_count": 409056,
+          "optimization_steps": 2180,
+          "IDH": 0.8374094202898551,
+          "MGMT": 0.5246913580246914,
+          "1p19Q": 0.8973063973063974
+        },
+        {
+          "order": 1,
+          "method": "整块 ROI＋逐字段监督",
+          "seed42": 0.7937441036776786,
+          "seed43": 0.8023283356918623,
+          "seed44": 0.8212316400722197,
+          "seed42_display": "0.7937",
+          "seed43_display": "0.8023",
+          "seed44_display": "0.8212",
+          "mean_sd": "0.8058 ± 0.0141",
+          "mean": 0.8057680264805868,
+          "sd": 0.014062886218761545,
+          "selection_epochs": "1 / 10 / 4",
+          "train_patients": 435,
+          "validation_patients": 63,
+          "epochs_per_run": 10,
+          "parameter_count": 409056,
+          "optimization_steps": 2180,
+          "IDH": 0.8740942028985508,
+          "MGMT": 0.6172839506172839,
+          "1p19Q": 0.9259259259259259
+        },
+        {
+          "order": 2,
+          "method": "分区汇总＋集合监督",
+          "seed42": 0.717276936026936,
+          "seed43": 0.772114258527302,
+          "seed44": 0.6533038720538721,
+          "seed42_display": "0.7173",
+          "seed43_display": "0.7721",
+          "seed44_display": "0.6533",
+          "mean_sd": "0.7142 ± 0.0595",
+          "mean": 0.7142316888693699,
+          "sd": 0.059463704317671305,
+          "selection_epochs": "6 / 7 / 7",
+          "train_patients": 435,
+          "validation_patients": 63,
+          "epochs_per_run": 10,
+          "parameter_count": 409056,
+          "optimization_steps": 2180,
+          "IDH": 0.8514492753623188,
+          "MGMT": 0.46296296296296297,
+          "1p19Q": 0.8282828282828283
+        },
+        {
+          "order": 3,
+          "method": "分区汇总＋逐字段监督",
+          "seed42": 0.7734333064949007,
+          "seed43": 0.822491724816604,
+          "seed44": 0.8013351103628882,
+          "seed42_display": "0.7734",
+          "seed43_display": "0.8225",
+          "seed44_display": "0.8013",
+          "mean_sd": "0.7991 ± 0.0246",
+          "mean": 0.7990867138914642,
+          "sd": 0.024606372489181384,
+          "selection_epochs": "3 / 6 / 3",
+          "train_patients": 435,
+          "validation_patients": 63,
+          "epochs_per_run": 10,
+          "parameter_count": 409056,
+          "optimization_steps": 2180,
+          "IDH": 0.8836050724637681,
+          "MGMT": 0.6584362139917695,
+          "1p19Q": 0.8552188552188552
+        }
+      ],
+      "pairs": [
+        {
+          "order": 0,
+          "comparison": "整块：逐字段 − 集合",
+          "seed42": "+0.0430",
+          "seed43": "+0.0372",
+          "seed44": "+0.0776",
+          "mean": "+0.0526",
+          "positive": "3 / 3"
+        },
+        {
+          "order": 1,
+          "comparison": "分区：逐字段 − 集合",
+          "seed42": "+0.0562",
+          "seed43": "+0.0504",
+          "seed44": "+0.1480",
+          "mean": "+0.0849",
+          "positive": "3 / 3"
+        },
+        {
+          "order": 2,
+          "comparison": "逐字段：分区 − 整块",
+          "seed42": "-0.0203",
+          "seed43": "+0.0202",
+          "seed44": "-0.0199",
+          "mean": "-0.0067",
+          "positive": "1 / 3"
+        },
+        {
+          "order": 3,
+          "comparison": "集合：分区 − 整块",
+          "seed42": "-0.0334",
+          "seed43": "+0.0070",
+          "seed44": "-0.0903",
+          "mean": "-0.0389",
+          "positive": "1 / 3"
+        }
+      ],
+      "fields": [
+        {
+          "order": 0,
+          "method": "整块 ROI＋集合监督",
+          "IDH": "0.8374 ± 0.0355",
+          "MGMT": "0.5247 ± 0.0327",
+          "1p19Q CODEL": "0.8973 ± 0.0127"
+        },
+        {
+          "order": 1,
+          "method": "整块 ROI＋逐字段监督",
+          "IDH": "0.8741 ± 0.0221",
+          "MGMT": "0.6173 ± 0.0344",
+          "1p19Q CODEL": "0.9259 ± 0.0077"
+        },
+        {
+          "order": 2,
+          "method": "分区汇总＋集合监督",
+          "IDH": "0.8514 ± 0.0133",
+          "MGMT": "0.4630 ± 0.1398",
+          "1p19Q CODEL": "0.8283 ± 0.0413"
+        },
+        {
+          "order": 3,
+          "method": "分区汇总＋逐字段监督",
+          "IDH": "0.8836 ± 0.0247",
+          "MGMT": "0.6584 ± 0.0518",
+          "1p19Q CODEL": "0.8552 ± 0.0673"
+        }
+      ],
+      "codel": [
+        {
+          "order": 420,
+          "seed": 42,
+          "method": "整块 ROI＋集合监督",
+          "auc": "0.8990",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 421,
+          "seed": 42,
+          "method": "整块 ROI＋逐字段监督",
+          "auc": "0.9192",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 422,
+          "seed": 42,
+          "method": "分区汇总＋集合监督",
+          "auc": "0.8636",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 423,
+          "seed": 42,
+          "method": "分区汇总＋逐字段监督",
+          "auc": "0.7778",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 430,
+          "seed": 43,
+          "method": "整块 ROI＋集合监督",
+          "auc": "0.9091",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 431,
+          "seed": 43,
+          "method": "整块 ROI＋逐字段监督",
+          "auc": "0.9343",
+          "predicted_positive": 1,
+          "positive_recall": "1/9",
+          "patients": 31
+        },
+        {
+          "order": 432,
+          "seed": 43,
+          "method": "分区汇总＋集合监督",
+          "auc": "0.8384",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 433,
+          "seed": 43,
+          "method": "分区汇总＋逐字段监督",
+          "auc": "0.8889",
+          "predicted_positive": 1,
+          "positive_recall": "1/9",
+          "patients": 31
+        },
+        {
+          "order": 440,
+          "seed": 44,
+          "method": "整块 ROI＋集合监督",
+          "auc": "0.8838",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 441,
+          "seed": 44,
+          "method": "整块 ROI＋逐字段监督",
+          "auc": "0.9242",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 442,
+          "seed": 44,
+          "method": "分区汇总＋集合监督",
+          "auc": "0.7828",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        },
+        {
+          "order": 443,
+          "seed": 44,
+          "method": "分区汇总＋逐字段监督",
+          "auc": "0.8990",
+          "predicted_positive": 0,
+          "positive_recall": "0/9",
+          "patients": 31
+        }
+      ]
+    }
+  },
+  "sources": [
+    {
+      "id": "audit",
+      "label": "三 seed 修复实验聚合审计",
+      "path": "revision/pasa_review_20261009/repair_repeats_audit_20261021/summary.json",
+      "query": {
+        "engine": "SQLite JSON1 + Python",
+        "language": "sql",
+        "description": "SQLite JSON1 实际读取已重算的审计摘要；Python 依 build_report.py 提取、命名和格式化聚合行。",
+        "sql": "SELECT json_extract(:summary_json, '$') AS audited_summary;",
+        "bindings": {
+          "summary_json": "UTF-8 text of revision/pasa_review_20261009/repair_repeats_audit_20261021/summary.json"
+        },
+        "transformation": "build_report.py；不重新训练或更改原审计数值。",
+        "tables_used": [
+          "repair_repeats_audit_20261021/summary.json"
+        ],
+        "filters": [
+          "训练 seed 42、43、44",
+          "共同训练 435 人、开发验证 63 人",
+          "各模型按验证宏 AUROC 首次严格最大值选模",
+          "本轮无 test 评分"
+        ],
+        "metric_definitions": {
+          "auc": "每字段用两个候选分数之差计算二分类 AUROC，再等权平均三个分子字段。",
+          "seed_sd": "同一验证集上，三个训练 seed 的样本标准差（ddof=1）；不是患者置信区间。",
+          "paired_difference": "同一训练 seed、同一验证患者和标签的两个已选模型宏 AUROC 之差。",
+          "positive_recall": "默认两个候选中分数更大者为预测类别；共缺失（co-deleted）真阳性数 / 9。"
+        }
+      }
+    },
+    {
+      "id": "model",
+      "label": "修复 pilot 模型与监督定义",
+      "path": "pasa_repair_pilot.py",
+      "query": {
+        "language": "python",
+        "description": "RepairAlignmentModel、fieldwise_loss；原型归一化余弦头与逐字段交叉熵。",
+        "tables_used": [
+          "pasa_repair_pilot.py"
+        ],
+        "filters": [
+          "冻结科学源码版本 86a8e6f",
+          "原始分区编号 1/2/3/4/5 不赋组织学含义"
+        ]
+      }
+    }
+  ]
+}

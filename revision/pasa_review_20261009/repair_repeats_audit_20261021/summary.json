@@ -1,0 +1,1787 @@
+{
+  "version": "pasa_repair_repeats_audit_20261021",
+  "scope": "Three training seeds on one reused development validation split; selected validation, not test.",
+  "protocol_version": "pasa_repair_pilot_v1",
+  "seeds": [
+    42,
+    43,
+    44
+  ],
+  "split_sizes": {
+    "train": 435,
+    "val": 63
+  },
+  "empty_retained_inputs": 0,
+  "input_coverage": {
+    "train": {
+      "retained": 435,
+      "present_by_raw_label": {
+        "1": 346,
+        "2": 410,
+        "3": 81,
+        "4": 318,
+        "5": 1
+      },
+      "resize_lost_by_raw_label": {
+        "1": 1,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      }
+    },
+    "val": {
+      "retained": 63,
+      "present_by_raw_label": {
+        "1": 52,
+        "2": 61,
+        "3": 10,
+        "4": 47,
+        "5": 0
+      },
+      "resize_lost_by_raw_label": {
+        "1": 0,
+        "2": 0,
+        "3": 0,
+        "4": 0,
+        "5": 0
+      }
+    }
+  },
+  "test_evaluated": false,
+  "runs": [
+    {
+      "seed": 42,
+      "method": "whole_roi_mass",
+      "selected_epoch": 6,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.7507111168041121,
+      "map": 0.8677248677248677,
+      "hit@1": 0.7354497354497355,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 9,
+          "true_positive_a": 6,
+          "false_positive_a": 3,
+          "recall_a": 0.375,
+          "recall_b": 0.9347826086956522,
+          "balanced_accuracy": 0.6548913043478262,
+          "auc": 0.8654891304347826,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.4876543209876543,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.898989898989899,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.705659656142748,
+      "auc_trajectory": [
+        0.7085015818409538,
+        0.7503059987963371,
+        0.7110049773093251,
+        0.6857239870524895,
+        0.7256741122985084,
+        0.7507111168041121,
+        0.7015739114169066,
+        0.7077569169960475,
+        0.6866978968428245,
+        0.705659656142748
+      ],
+      "map_trajectory": [
+        0.8558201058201059,
+        0.8544973544973545,
+        0.8571428571428572,
+        0.8571428571428572,
+        0.8571428571428572,
+        0.8677248677248677,
+        0.8624338624338624,
+        0.8703703703703705,
+        0.8597883597883599,
+        0.8584656084656085
+      ],
+      "loss_trajectory": [
+        0.8824639249122006,
+        0.7807352526434537,
+        0.7387165020252097,
+        0.7025835289352241,
+        0.6640087519568959,
+        0.7025905453610695,
+        0.6429098519785651,
+        0.6497698035733454,
+        0.6352929792184939,
+        0.5821352580498005
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5750.883530855179
+    },
+    {
+      "seed": 42,
+      "method": "whole_roi_field",
+      "selected_epoch": 1,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.7937441036776786,
+      "map": 0.8505291005291007,
+      "hit@1": 0.7010582010582009,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 13,
+          "true_positive_a": 8,
+          "false_positive_a": 5,
+          "recall_a": 0.5,
+          "recall_b": 0.8913043478260869,
+          "balanced_accuracy": 0.6956521739130435,
+          "auc": 0.8817934782608695,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 11,
+          "true_positive_a": 4,
+          "false_positive_a": 7,
+          "recall_a": 0.4444444444444444,
+          "recall_b": 0.6111111111111112,
+          "balanced_accuracy": 0.5277777777777778,
+          "auc": 0.5802469135802469,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.9191919191919192,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.7183702971746451,
+      "auc_trajectory": [
+        0.7937441036776786,
+        0.6958646448380748,
+        0.7566572528830983,
+        0.5960449909725272,
+        0.717572768750305,
+        0.7253508311781259,
+        0.7329011735714634,
+        0.7291900486344932,
+        0.7163126840059207,
+        0.7183702971746451
+      ],
+      "map_trajectory": [
+        0.8505291005291007,
+        0.851851851851852,
+        0.8412698412698413,
+        0.8637566137566138,
+        0.8743386243386244,
+        0.8597883597883599,
+        0.8862433862433863,
+        0.8902116402116402,
+        0.8783068783068784,
+        0.8743386243386244
+      ],
+      "loss_trajectory": [
+        1.0199927030623643,
+        0.9277000676283891,
+        0.9028566222937627,
+        0.8637839347466655,
+        0.8568637319337362,
+        0.8484831354398837,
+        0.8346578806296162,
+        0.8447060983413938,
+        0.8316736492617377,
+        0.7901094073536752
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5887.375799655914
+    },
+    {
+      "seed": 42,
+      "method": "region_pool_mass",
+      "selected_epoch": 6,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.717276936026936,
+      "map": 0.8611111111111112,
+      "hit@1": 0.7222222222222221,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 8,
+          "true_positive_a": 5,
+          "false_positive_a": 3,
+          "recall_a": 0.3125,
+          "recall_b": 0.9347826086956522,
+          "balanced_accuracy": 0.6236413043478262,
+          "auc": 0.84375,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 1,
+          "true_positive_a": 1,
+          "false_positive_a": 0,
+          "recall_a": 0.1111111111111111,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5555555555555556,
+          "auc": 0.4444444444444444,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.8636363636363636,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.649828091706111,
+      "auc_trajectory": [
+        0.5838238463540396,
+        0.6763711999219245,
+        0.5633758071861937,
+        0.6571735877291432,
+        0.6998014565949348,
+        0.717276936026936,
+        0.5814129621496772,
+        0.6493945086940256,
+        0.6612583158476878,
+        0.649828091706111
+      ],
+      "map_trajectory": [
+        0.8293650793650794,
+        0.8518518518518519,
+        0.8531746031746033,
+        0.8650793650793651,
+        0.8492063492063493,
+        0.8611111111111112,
+        0.873015873015873,
+        0.8650793650793651,
+        0.8584656084656085,
+        0.8544973544973545
+      ],
+      "loss_trajectory": [
+        0.9231731025651954,
+        0.7059532549189425,
+        0.6887328243803704,
+        0.6422878391441258,
+        0.6136432908047205,
+        0.601640108810074,
+        0.527650471391349,
+        0.58497660242278,
+        0.4966406690663305,
+        0.4534937381744385
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5829.056934833527
+    },
+    {
+      "seed": 42,
+      "method": "region_pool_field",
+      "selected_epoch": 3,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.7734333064949007,
+      "map": 0.851851851851852,
+      "hit@1": 0.7037037037037035,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 5,
+          "true_positive_a": 4,
+          "false_positive_a": 1,
+          "recall_a": 0.25,
+          "recall_b": 0.9782608695652174,
+          "balanced_accuracy": 0.6141304347826086,
+          "auc": 0.8573369565217391,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 16,
+          "true_positive_a": 6,
+          "false_positive_a": 10,
+          "recall_a": 0.6666666666666666,
+          "recall_b": 0.4444444444444444,
+          "balanced_accuracy": 0.5555555555555556,
+          "auc": 0.6851851851851852,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.7777777777777778,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.7464286585663397,
+      "auc_trajectory": [
+        0.6596429268530718,
+        0.739783604970803,
+        0.7734333064949007,
+        0.7090576660323037,
+        0.6891890930236341,
+        0.6987294442004587,
+        0.7178381032547699,
+        0.7367215837928397,
+        0.7693480700727077,
+        0.7464286585663397
+      ],
+      "map_trajectory": [
+        0.8346560846560847,
+        0.8968253968253969,
+        0.851851851851852,
+        0.8756613756613756,
+        0.8650793650793651,
+        0.8650793650793652,
+        0.876984126984127,
+        0.8756613756613756,
+        0.8875661375661376,
+        0.8875661375661376
+      ],
+      "loss_trajectory": [
+        0.9729600543092037,
+        0.8169063558009849,
+        0.7853860974269009,
+        0.7599727410352093,
+        0.7283131497259112,
+        0.7167608662369265,
+        0.6787271691293552,
+        0.6787601688940977,
+        0.6503588320280629,
+        0.6505936826525749
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5825.90988612175
+    },
+    {
+      "seed": 43,
+      "method": "whole_roi_mass",
+      "selected_epoch": 5,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.7651042429122139,
+      "map": 0.8558201058201058,
+      "hit@1": 0.7116402116402115,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 9,
+          "true_positive_a": 5,
+          "false_positive_a": 4,
+          "recall_a": 0.3125,
+          "recall_b": 0.9130434782608695,
+          "balanced_accuracy": 0.6127717391304348,
+          "auc": 0.8491847826086957,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.5370370370370371,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.9090909090909091,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.6906855389645244,
+      "auc_trajectory": [
+        0.7085051399664927,
+        0.6551993363587566,
+        0.6383993924754795,
+        0.6659057361050115,
+        0.7651042429122139,
+        0.6478197839912815,
+        0.6712810471868442,
+        0.6520534450788075,
+        0.6898092234746825,
+        0.6906855389645244
+      ],
+      "map_trajectory": [
+        0.8611111111111112,
+        0.8373015873015873,
+        0.8637566137566137,
+        0.8637566137566137,
+        0.8558201058201058,
+        0.8531746031746031,
+        0.8571428571428571,
+        0.8492063492063492,
+        0.8558201058201058,
+        0.8478835978835978
+      ],
+      "loss_trajectory": [
+        1.0044706007529949,
+        0.7820417480907221,
+        0.6963904764460421,
+        0.7894389588257362,
+        0.7163772051361785,
+        0.6250824426782542,
+        0.6089215300549036,
+        0.6745555091863391,
+        0.5581565618515014,
+        0.62520513856548
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5729.623786211014
+    },
+    {
+      "seed": 43,
+      "method": "whole_roi_field",
+      "selected_epoch": 10,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.8023283356918623,
+      "map": 0.8703703703703705,
+      "hit@1": 0.7407407407407406,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 19,
+          "true_positive_a": 12,
+          "false_positive_a": 7,
+          "recall_a": 0.75,
+          "recall_b": 0.8478260869565217,
+          "balanced_accuracy": 0.7989130434782609,
+          "auc": 0.8491847826086957,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 3,
+          "true_positive_a": 1,
+          "false_positive_a": 2,
+          "recall_a": 0.1111111111111111,
+          "recall_b": 0.8888888888888888,
+          "balanced_accuracy": 0.5,
+          "auc": 0.6234567901234568,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 1,
+          "true_positive_a": 1,
+          "false_positive_a": 0,
+          "recall_a": 0.1111111111111111,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5555555555555556,
+          "auc": 0.9343434343434344,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.8023283356918623,
+      "auc_trajectory": [
+        0.785631069145562,
+        0.7119905780835732,
+        0.7895988874249743,
+        0.7929862229379138,
+        0.7267674734462174,
+        0.7618653320646075,
+        0.7665910310837848,
+        0.7904355552302412,
+        0.8017473446217407,
+        0.8023283356918623
+      ],
+      "map_trajectory": [
+        0.8306878306878307,
+        0.8677248677248677,
+        0.8597883597883598,
+        0.8664021164021165,
+        0.8558201058201058,
+        0.8386243386243387,
+        0.8756613756613756,
+        0.8703703703703705,
+        0.8703703703703705,
+        0.8703703703703705
+      ],
+      "loss_trajectory": [
+        0.9763303068862564,
+        0.9390349722456658,
+        0.9260818072091574,
+        0.9033111493135321,
+        0.8568602033987127,
+        0.8354921339914716,
+        0.8414624374659582,
+        0.8344541172957284,
+        0.7891546776582454,
+        0.8344883045588417
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5648.383667230606
+    },
+    {
+      "seed": 43,
+      "method": "region_pool_mass",
+      "selected_epoch": 7,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.772114258527302,
+      "map": 0.8664021164021164,
+      "hit@1": 0.7328042328042328,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 15,
+          "true_positive_a": 10,
+          "false_positive_a": 5,
+          "recall_a": 0.625,
+          "recall_b": 0.8913043478260869,
+          "balanced_accuracy": 0.7581521739130435,
+          "auc": 0.8668478260869565,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.6111111111111112,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.8383838383838383,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.7605269685583695,
+      "auc_trajectory": [
+        0.6967094455017161,
+        0.6930476260186406,
+        0.6016566632508662,
+        0.6947123204671515,
+        0.7292098724767806,
+        0.7623675360692269,
+        0.772114258527302,
+        0.7613539785943167,
+        0.7413878112851543,
+        0.7605269685583695
+      ],
+      "map_trajectory": [
+        0.8571428571428572,
+        0.8571428571428572,
+        0.8650793650793651,
+        0.8650793650793651,
+        0.8690476190476191,
+        0.8664021164021164,
+        0.8664021164021164,
+        0.8703703703703705,
+        0.8584656084656085,
+        0.8624338624338624
+      ],
+      "loss_trajectory": [
+        0.865874729211303,
+        0.7396955632615363,
+        0.6608199964994672,
+        0.6690457934620737,
+        0.5805387683298396,
+        0.5769864254984363,
+        0.5302592400846811,
+        0.5701476467066797,
+        0.4847043952722659,
+        0.445185880551393
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5658.10124373436
+    },
+    {
+      "seed": 43,
+      "method": "region_pool_field",
+      "selected_epoch": 6,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.822491724816604,
+      "map": 0.8743386243386244,
+      "hit@1": 0.7486772486772486,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 11,
+          "true_positive_a": 8,
+          "false_positive_a": 3,
+          "recall_a": 0.5,
+          "recall_b": 0.9347826086956522,
+          "balanced_accuracy": 0.7173913043478262,
+          "auc": 0.8872282608695652,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 4,
+          "true_positive_a": 2,
+          "false_positive_a": 2,
+          "recall_a": 0.2222222222222222,
+          "recall_b": 0.8888888888888888,
+          "balanced_accuracy": 0.5555555555555556,
+          "auc": 0.691358024691358,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 1,
+          "true_positive_a": 1,
+          "false_positive_a": 0,
+          "recall_a": 0.1111111111111111,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5555555555555556,
+          "auc": 0.8888888888888888,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.8125477805429496,
+      "auc_trajectory": [
+        0.7495191447486134,
+        0.7492741423900844,
+        0.6488247003041688,
+        0.7502683843263553,
+        0.7707560711787765,
+        0.822491724816604,
+        0.8174015720815238,
+        0.7975045340685437,
+        0.7900223043640917,
+        0.8125477805429496
+      ],
+      "map_trajectory": [
+        0.8452380952380953,
+        0.873015873015873,
+        0.8743386243386244,
+        0.85978835978836,
+        0.876984126984127,
+        0.8743386243386244,
+        0.8928571428571429,
+        0.8690476190476191,
+        0.8624338624338624,
+        0.8703703703703705
+      ],
+      "loss_trajectory": [
+        0.9575710631992626,
+        0.8554029185367726,
+        0.7999130714213711,
+        0.7567055094516141,
+        0.7260118684891996,
+        0.7155538734947813,
+        0.6814587471985268,
+        0.6838334636998246,
+        0.6579954401386537,
+        0.6527675367977427
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5572.817764520645
+    },
+    {
+      "seed": 44,
+      "method": "whole_roi_mass",
+      "selected_epoch": 7,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.7435918159046179,
+      "map": 0.8597883597883598,
+      "hit@1": 0.7195767195767196,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 10,
+          "true_positive_a": 6,
+          "false_positive_a": 4,
+          "recall_a": 0.375,
+          "recall_b": 0.9130434782608695,
+          "balanced_accuracy": 0.6440217391304348,
+          "auc": 0.7975543478260869,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.5493827160493827,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.8838383838383839,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.6990827152360969,
+      "auc_trajectory": [
+        0.5449106605507571,
+        0.6728171408123099,
+        0.6296270881113877,
+        0.7152686283121065,
+        0.6621442891068495,
+        0.6974088713219148,
+        0.7435918159046179,
+        0.6512559166544674,
+        0.7138209795214626,
+        0.6990827152360969
+      ],
+      "map_trajectory": [
+        0.8611111111111113,
+        0.8690476190476192,
+        0.8637566137566137,
+        0.8835978835978836,
+        0.8597883597883598,
+        0.8412698412698413,
+        0.8597883597883598,
+        0.8412698412698413,
+        0.8412698412698413,
+        0.8412698412698413
+      ],
+      "loss_trajectory": [
+        1.0223344863146202,
+        0.7181711032472807,
+        0.7319562468035468,
+        0.7156609661277683,
+        0.6384548011867479,
+        0.6708916592872006,
+        0.6140467553303159,
+        0.6173586341156356,
+        0.6271971121601675,
+        0.546678283844871
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5877.084595918655
+    },
+    {
+      "seed": 44,
+      "method": "whole_roi_field",
+      "selected_epoch": 4,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.8212316400722197,
+      "map": 0.8425925925925927,
+      "hit@1": 0.685185185185185,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 15,
+          "true_positive_a": 9,
+          "false_positive_a": 6,
+          "recall_a": 0.5625,
+          "recall_b": 0.8695652173913043,
+          "balanced_accuracy": 0.7160326086956521,
+          "auc": 0.8913043478260869,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 14,
+          "true_positive_a": 5,
+          "false_positive_a": 9,
+          "recall_a": 0.5555555555555556,
+          "recall_b": 0.5,
+          "balanced_accuracy": 0.5277777777777778,
+          "auc": 0.6481481481481481,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.9242424242424242,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.7527387400575806,
+      "auc_trajectory": [
+        0.6421984539436231,
+        0.7411219684770409,
+        0.8085418394899072,
+        0.8212316400722197,
+        0.7945807714829455,
+        0.7877481538411489,
+        0.7725966386896338,
+        0.7561748727207664,
+        0.761087627482555,
+        0.7527387400575806
+      ],
+      "map_trajectory": [
+        0.8769841269841271,
+        0.8835978835978837,
+        0.8981481481481481,
+        0.8425925925925927,
+        0.8412698412698414,
+        0.8597883597883599,
+        0.8703703703703705,
+        0.8492063492063493,
+        0.8531746031746033,
+        0.8478835978835979
+      ],
+      "loss_trajectory": [
+        1.014622595940513,
+        0.9053098477851386,
+        0.8679599364598592,
+        0.9138458697103906,
+        0.8385605314254075,
+        0.8781765975143717,
+        0.8669279254716018,
+        0.8227279240286899,
+        0.8034171190412566,
+        0.7948577925049025
+      ],
+      "encoded_training_views_per_epoch": [
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435,
+        435
+      ],
+      "seconds": 5989.4221732616425
+    },
+    {
+      "seed": 44,
+      "method": "region_pool_mass",
+      "selected_epoch": 7,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.6533038720538721,
+      "map": 0.8611111111111112,
+      "hit@1": 0.7222222222222221,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 9,
+          "true_positive_a": 6,
+          "false_positive_a": 3,
+          "recall_a": 0.375,
+          "recall_b": 0.9347826086956522,
+          "balanced_accuracy": 0.6548913043478262,
+          "auc": 0.84375,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.3333333333333333,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.7828282828282829,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.6383495787179362,
+      "auc_trajectory": [
+        0.5182404764228435,
+        0.5906900120366304,
+        0.5635272816734168,
+        0.6241328339758291,
+        0.607564168252574,
+        0.6003081336716602,
+        0.6533038720538721,
+        0.622046247499146,
+        0.653235251061338,
+        0.6383495787179362
+      ],
+      "map_trajectory": [
+        0.8571428571428571,
+        0.8571428571428571,
+        0.8571428571428571,
+        0.8611111111111112,
+        0.8650793650793651,
+        0.8611111111111112,
+        0.8611111111111112,
+        0.8611111111111112,
+        0.8611111111111112,
+        0.8611111111111112
+      ],
+      "loss_trajectory": [
+        0.8432106223599664,
+        0.6689642484160675,
+        0.6446769114198356,
+        0.6241915028670738,
+        0.5797786142634249,
+        0.5380164031324716,
+        0.524282072056299,
+        0.5382063375122246,
+        0.5764629355792341,
+        0.4941209277887454
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5737.727083444595
+    },
+    {
+      "seed": 44,
+      "method": "region_pool_field",
+      "selected_epoch": 3,
+      "parameters": 409056,
+      "training_steps": 2180,
+      "auc": 0.8013351103628882,
+      "map": 0.8650793650793652,
+      "hit@1": 0.73015873015873,
+      "fields": {
+        "IDH": {
+          "patients": 62,
+          "class_a": "idh::mutated",
+          "class_b": "idh::wild type",
+          "class_a_count": 16,
+          "class_b_count": 46,
+          "predicted_a": 11,
+          "true_positive_a": 8,
+          "false_positive_a": 3,
+          "recall_a": 0.5,
+          "recall_b": 0.9347826086956522,
+          "balanced_accuracy": 0.7173913043478262,
+          "auc": 0.90625,
+          "exact_score_ties": 0
+        },
+        "MGMT": {
+          "patients": 27,
+          "class_a": "mgmt::methylated",
+          "class_b": "mgmt::unmethylated",
+          "class_a_count": 9,
+          "class_b_count": 18,
+          "predicted_a": 12,
+          "true_positive_a": 5,
+          "false_positive_a": 7,
+          "recall_a": 0.5555555555555556,
+          "recall_b": 0.6111111111111112,
+          "balanced_accuracy": 0.5833333333333334,
+          "auc": 0.5987654320987654,
+          "exact_score_ties": 0
+        },
+        "1p19Q CODEL": {
+          "patients": 31,
+          "class_a": "1p19q_codel::co-deleted",
+          "class_b": "1p19q_codel::non co-deleted",
+          "class_a_count": 9,
+          "class_b_count": 22,
+          "predicted_a": 0,
+          "true_positive_a": 0,
+          "false_positive_a": 0,
+          "recall_a": 0.0,
+          "recall_b": 1.0,
+          "balanced_accuracy": 0.5,
+          "auc": 0.898989898989899,
+          "exact_score_ties": 0
+        }
+      },
+      "last_auc": 0.7469999918671416,
+      "auc_trajectory": [
+        0.6261812976788822,
+        0.6558835130695034,
+        0.8013351103628882,
+        0.7673987255810927,
+        0.7918140747247028,
+        0.7245629605231055,
+        0.7103172424730396,
+        0.7754619463556662,
+        0.7667491135184372,
+        0.7469999918671416
+      ],
+      "map_trajectory": [
+        0.8690476190476191,
+        0.8320105820105821,
+        0.8650793650793652,
+        0.85978835978836,
+        0.8611111111111113,
+        0.8571428571428572,
+        0.8650793650793651,
+        0.8677248677248678,
+        0.8783068783068784,
+        0.8664021164021164
+      ],
+      "loss_trajectory": [
+        0.9671419473900192,
+        0.8141131411852508,
+        0.7587811993285157,
+        0.7881074166524855,
+        0.7305577552695384,
+        0.7170514273403705,
+        0.707697273962114,
+        0.6848184366282289,
+        0.6700064329751607,
+        0.6593902025072054
+      ],
+      "encoded_training_views_per_epoch": [
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156,
+        1156
+      ],
+      "seconds": 5721.645973920822
+    }
+  ],
+  "method_summary": {
+    "whole_roi_mass": {
+      "auc": {
+        "mean": 0.7531357252069814,
+        "training_seed_sd": 0.01095925058431163,
+        "min": 0.7435918159046179,
+        "max": 0.7651042429122139
+      },
+      "last_auc": {
+        "mean": 0.6984759701144564,
+        "training_seed_sd": 0.00750547473840049,
+        "min": 0.6906855389645244,
+        "max": 0.705659656142748
+      },
+      "map": {
+        "mean": 0.861111111111111,
+        "training_seed_sd": 0.006061608062110878,
+        "min": 0.8558201058201058,
+        "max": 0.8677248677248677
+      },
+      "fields": {
+        "IDH": {
+          "auc": {
+            "mean": 0.8374094202898551,
+            "training_seed_sd": 0.03546516657690562,
+            "min": 0.7975543478260869,
+            "max": 0.8654891304347826
+          },
+          "recall_a": {
+            "mean": 0.3541666666666667,
+            "training_seed_sd": 0.036084391824351615,
+            "min": 0.3125,
+            "max": 0.375
+          },
+          "predicted_a_by_seed": [
+            9,
+            9,
+            10
+          ]
+        },
+        "MGMT": {
+          "auc": {
+            "mean": 0.5246913580246914,
+            "training_seed_sd": 0.03266359643289619,
+            "min": 0.4876543209876543,
+            "max": 0.5493827160493827
+          },
+          "recall_a": {
+            "mean": 0.0,
+            "training_seed_sd": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "predicted_a_by_seed": [
+            0,
+            0,
+            0
+          ]
+        },
+        "1p19Q CODEL": {
+          "auc": {
+            "mean": 0.8973063973063974,
+            "training_seed_sd": 0.012710158981937262,
+            "min": 0.8838383838383839,
+            "max": 0.9090909090909091
+          },
+          "recall_a": {
+            "mean": 0.0,
+            "training_seed_sd": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "predicted_a_by_seed": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "whole_roi_field": {
+      "auc": {
+        "mean": 0.8057680264805868,
+        "training_seed_sd": 0.014062886218761545,
+        "min": 0.7937441036776786,
+        "max": 0.8212316400722197
+      },
+      "last_auc": {
+        "mean": 0.7578124576413626,
+        "training_seed_sd": 0.042208352437694364,
+        "min": 0.7183702971746451,
+        "max": 0.8023283356918623
+      },
+      "map": {
+        "mean": 0.8544973544973545,
+        "training_seed_sd": 0.014307743156603128,
+        "min": 0.8425925925925927,
+        "max": 0.8703703703703705
+      },
+      "fields": {
+        "IDH": {
+          "auc": {
+            "mean": 0.8740942028985508,
+            "training_seed_sd": 0.02209012390988619,
+            "min": 0.8491847826086957,
+            "max": 0.8913043478260869
+          },
+          "recall_a": {
+            "mean": 0.6041666666666666,
+            "training_seed_sd": 0.1301041249666333,
+            "min": 0.5,
+            "max": 0.75
+          },
+          "predicted_a_by_seed": [
+            13,
+            19,
+            15
+          ]
+        },
+        "MGMT": {
+          "auc": {
+            "mean": 0.6172839506172839,
+            "training_seed_sd": 0.03436891581993839,
+            "min": 0.5802469135802469,
+            "max": 0.6481481481481481
+          },
+          "recall_a": {
+            "mean": 0.3703703703703704,
+            "training_seed_sd": 0.23129622216290366,
+            "min": 0.1111111111111111,
+            "max": 0.5555555555555556
+          },
+          "predicted_a_by_seed": [
+            11,
+            3,
+            14
+          ]
+        },
+        "1p19Q CODEL": {
+          "auc": {
+            "mean": 0.9259259259259259,
+            "training_seed_sd": 0.0077147738972320554,
+            "min": 0.9191919191919192,
+            "max": 0.9343434343434344
+          },
+          "recall_a": {
+            "mean": 0.037037037037037035,
+            "training_seed_sd": 0.06415002990995841,
+            "min": 0.0,
+            "max": 0.1111111111111111
+          },
+          "predicted_a_by_seed": [
+            0,
+            1,
+            0
+          ]
+        }
+      }
+    },
+    "region_pool_mass": {
+      "auc": {
+        "mean": 0.7142316888693699,
+        "training_seed_sd": 0.059463704317671305,
+        "min": 0.6533038720538721,
+        "max": 0.772114258527302
+      },
+      "last_auc": {
+        "mean": 0.6829015463274722,
+        "training_seed_sd": 0.06747013189181371,
+        "min": 0.6383495787179362,
+        "max": 0.7605269685583695
+      },
+      "map": {
+        "mean": 0.8628747795414462,
+        "training_seed_sd": 0.0030547633290456066,
+        "min": 0.8611111111111112,
+        "max": 0.8664021164021164
+      },
+      "fields": {
+        "IDH": {
+          "auc": {
+            "mean": 0.8514492753623188,
+            "training_seed_sd": 0.013335536108999518,
+            "min": 0.84375,
+            "max": 0.8668478260869565
+          },
+          "recall_a": {
+            "mean": 0.4375,
+            "training_seed_sd": 0.16535945694153692,
+            "min": 0.3125,
+            "max": 0.625
+          },
+          "predicted_a_by_seed": [
+            8,
+            15,
+            9
+          ]
+        },
+        "MGMT": {
+          "auc": {
+            "mean": 0.46296296296296297,
+            "training_seed_sd": 0.1398117488013102,
+            "min": 0.3333333333333333,
+            "max": 0.6111111111111112
+          },
+          "recall_a": {
+            "mean": 0.037037037037037035,
+            "training_seed_sd": 0.06415002990995841,
+            "min": 0.0,
+            "max": 0.1111111111111111
+          },
+          "predicted_a_by_seed": [
+            1,
+            0,
+            0
+          ]
+        },
+        "1p19Q CODEL": {
+          "auc": {
+            "mean": 0.8282828282828283,
+            "training_seed_sd": 0.041340165514507296,
+            "min": 0.7828282828282829,
+            "max": 0.8636363636363636
+          },
+          "recall_a": {
+            "mean": 0.0,
+            "training_seed_sd": 0.0,
+            "min": 0.0,
+            "max": 0.0
+          },
+          "predicted_a_by_seed": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    },
+    "region_pool_field": {
+      "auc": {
+        "mean": 0.7990867138914642,
+        "training_seed_sd": 0.024606372489181384,
+        "min": 0.7734333064949007,
+        "max": 0.822491724816604
+      },
+      "last_auc": {
+        "mean": 0.7686588103254769,
+        "training_seed_sd": 0.03801003664162668,
+        "min": 0.7464286585663397,
+        "max": 0.8125477805429496
+      },
+      "map": {
+        "mean": 0.8637566137566138,
+        "training_seed_sd": 0.011301592255711002,
+        "min": 0.851851851851852,
+        "max": 0.8743386243386244
+      },
+      "fields": {
+        "IDH": {
+          "auc": {
+            "mean": 0.8836050724637681,
+            "training_seed_sd": 0.02465698838553659,
+            "min": 0.8573369565217391,
+            "max": 0.90625
+          },
+          "recall_a": {
+            "mean": 0.4166666666666667,
+            "training_seed_sd": 0.14433756729740643,
+            "min": 0.25,
+            "max": 0.5
+          },
+          "predicted_a_by_seed": [
+            5,
+            11,
+            11
+          ]
+        },
+        "MGMT": {
+          "auc": {
+            "mean": 0.6584362139917695,
+            "training_seed_sd": 0.05176850051608693,
+            "min": 0.5987654320987654,
+            "max": 0.691358024691358
+          },
+          "recall_a": {
+            "mean": 0.48148148148148145,
+            "training_seed_sd": 0.23129622216290363,
+            "min": 0.2222222222222222,
+            "max": 0.6666666666666666
+          },
+          "predicted_a_by_seed": [
+            16,
+            4,
+            12
+          ]
+        },
+        "1p19Q CODEL": {
+          "auc": {
+            "mean": 0.8552188552188552,
+            "training_seed_sd": 0.06725583958059991,
+            "min": 0.7777777777777778,
+            "max": 0.898989898989899
+          },
+          "recall_a": {
+            "mean": 0.037037037037037035,
+            "training_seed_sd": 0.06415002990995841,
+            "min": 0.0,
+            "max": 0.1111111111111111
+          },
+          "predicted_a_by_seed": [
+            0,
+            1,
+            0
+          ]
+        }
+      }
+    }
+  },
+  "paired_comparisons": {
+    "field_minus_mass_whole_roi": {
+      "by_seed": {
+        "42": 0.04303298687356649,
+        "43": 0.03722409277964844,
+        "44": 0.07763982416760185
+      },
+      "mean": 0.052632301273605596,
+      "training_seed_sd": 0.02185104033264547,
+      "min": 0.03722409277964844,
+      "max": 0.07763982416760185,
+      "positive_directions": 3,
+      "field_differences_by_seed": {
+        "42": {
+          "IDH": 0.016304347826086918,
+          "MGMT": 0.09259259259259262,
+          "1p19Q CODEL": 0.02020202020202022
+        },
+        "43": {
+          "IDH": 0.0,
+          "MGMT": 0.08641975308641969,
+          "1p19Q CODEL": 0.025252525252525304
+        },
+        "44": {
+          "IDH": 0.09375,
+          "MGMT": 0.09876543209876543,
+          "1p19Q CODEL": 0.04040404040404033
+        }
+      }
+    },
+    "field_minus_mass_region_pool": {
+      "by_seed": {
+        "42": 0.056156370467964734,
+        "43": 0.050377466289302064,
+        "44": 0.1480312383090161
+      },
+      "mean": 0.0848550250220943,
+      "training_seed_sd": 0.054788451130986696,
+      "min": 0.050377466289302064,
+      "max": 0.1480312383090161,
+      "positive_directions": 3,
+      "field_differences_by_seed": {
+        "42": {
+          "IDH": 0.013586956521739135,
+          "MGMT": 0.2407407407407408,
+          "1p19Q CODEL": -0.08585858585858586
+        },
+        "43": {
+          "IDH": 0.020380434782608647,
+          "MGMT": 0.08024691358024683,
+          "1p19Q CODEL": 0.0505050505050505
+        },
+        "44": {
+          "IDH": 0.0625,
+          "MGMT": 0.2654320987654321,
+          "1p19Q CODEL": 0.11616161616161613
+        }
+      }
+    },
+    "region_minus_whole_field": {
+      "by_seed": {
+        "42": -0.02031079718277784,
+        "43": 0.020163389124741693,
+        "44": -0.019896529709331534
+      },
+      "mean": -0.006681312589122561,
+      "training_seed_sd": 0.023249116369545072,
+      "min": -0.02031079718277784,
+      "max": 0.020163389124741693,
+      "positive_directions": 1,
+      "field_differences_by_seed": {
+        "42": {
+          "IDH": -0.024456521739130377,
+          "MGMT": 0.1049382716049383,
+          "1p19Q CODEL": -0.14141414141414144
+        },
+        "43": {
+          "IDH": 0.03804347826086951,
+          "MGMT": 0.0679012345679012,
+          "1p19Q CODEL": -0.045454545454545525
+        },
+        "44": {
+          "IDH": 0.014945652173913082,
+          "MGMT": -0.04938271604938271,
+          "1p19Q CODEL": -0.025252525252525193
+        }
+      }
+    },
+    "region_minus_whole_mass": {
+      "by_seed": {
+        "42": -0.03343418077717608,
+        "43": 0.007010015615088072,
+        "44": -0.09028794385074579
+      },
+      "mean": -0.03890403633761127,
+      "training_seed_sd": 0.04887906217331486,
+      "min": -0.09028794385074579,
+      "max": 0.007010015615088072,
+      "positive_directions": 1,
+      "field_differences_by_seed": {
+        "42": {
+          "IDH": -0.021739130434782594,
+          "MGMT": -0.0432098765432099,
+          "1p19Q CODEL": -0.03535353535353536
+        },
+        "43": {
+          "IDH": 0.017663043478260865,
+          "MGMT": 0.07407407407407407,
+          "1p19Q CODEL": -0.07070707070707072
+        },
+        "44": {
+          "IDH": 0.04619565217391308,
+          "MGMT": -0.2160493827160494,
+          "1p19Q CODEL": -0.101010101010101
+        }
+      }
+    }
+  },
+  "checks": {
+    "rescored_epoch_files": 120,
+    "rescored_selected_files": 12,
+    "unique_patient_field_rows_per_epoch": 189,
+    "known_patient_field_rows_per_epoch": 120,
+    "missing_patient_field_rows_per_epoch": 69,
+    "identical_label_and_mask_signatures": true,
+    "direct_pairwise_auc_crosscheck": true,
+    "finite_raw_scores": true,
+    "strict_first_maximum_selection": true
+  },
+  "total_training_hours": 19.230009011030198,
+  "new_training_hours": 12.75966841340065
+}

@@ -1,0 +1,1859 @@
+{
+  "audit_version": "repair_repeat_integrity_20261021_v1",
+  "created_utc": "2026-10-21T01:22:32.468459+00:00",
+  "script_sha256": "196ce9a2cee2b5cf672093034db943e8de12ddd2beca75eb5b7836f7f76b651b",
+  "reference_directory": "output/20261019_AAAI_review/pasa_repair_pilot_20261020_095259_432520",
+  "repeat_directory": "output/20261019_AAAI_review/pasa_repair_repeats_20261020_171817_445198",
+  "method": {
+    "science_commit": "86a8e6f432b05f134923ecee574e0b8e688f54ce",
+    "coordinator_commit": "5ce2b3b8643f9af1a4da848e74250eb5334f1314",
+    "source_hash_input": "raw bytes from git show <pinned-commit>:<file>; not working-tree text",
+    "artifact_hash_input": "raw downloaded file bytes",
+    "checkpoint_load": "torch.load(map_location=cpu, weights_only=True)",
+    "validation_comparison": "exact saved records, masks, metrics, and first strict maximum",
+    "images_read_or_training_run": false,
+    "original_results_modified": false
+  },
+  "summary": {
+    "passed": true,
+    "check_count": 290,
+    "failed_check_count": 0,
+    "run_count": 12,
+    "new_run_count": 8,
+    "epoch_record_count": 120,
+    "checkpoint_count": 36,
+    "strict_json_count": 198,
+    "common_validation_mask_sha256": "cd928893f8036e7e6ed8ef4610347495f2b4cc7ac6b27de2cd6f775b6898af94"
+  },
+  "limitations": [
+    "No independent MRI inference replay was performed.",
+    "Raw MRI voxels are not hashed in the returned manifests.",
+    "Saved replay equality does not independently rerun the GPU computation.",
+    "No test-named artifacts plus frozen loader guards do not prove all external server actions.",
+    "Three training seeds reuse one development validation split; no independent generalization claim.",
+    "Equal parameter and optimizer-step counts do not imply equal FLOPs or encoded-view counts."
+  ],
+  "checks": [
+    {
+      "check": "reference_artifact_set",
+      "passed": true,
+      "count": 5
+    },
+    {
+      "check": "reference_hash:protocol.json",
+      "passed": true,
+      "expected_sha256": "6138dfb2ac96dfbf3c02157eddd9f0ce0ca4afc47ce1cdec26f97f14bb89d6c2",
+      "actual_sha256": "6138dfb2ac96dfbf3c02157eddd9f0ce0ca4afc47ce1cdec26f97f14bb89d6c2"
+    },
+    {
+      "check": "reference_hash:inputs.json",
+      "passed": true,
+      "expected_sha256": "161d45520b856df10d733622eaea213b74744490939d1becdd6a38ea6ce6051f",
+      "actual_sha256": "161d45520b856df10d733622eaea213b74744490939d1becdd6a38ea6ce6051f"
+    },
+    {
+      "check": "reference_hash:anchor_vocab.json",
+      "passed": true,
+      "expected_sha256": "699bb59ad4863fad1e05ed303c82e0b7a1da9569475657ff2045130026434e6f",
+      "actual_sha256": "699bb59ad4863fad1e05ed303c82e0b7a1da9569475657ff2045130026434e6f"
+    },
+    {
+      "check": "reference_hash:complete.json",
+      "passed": true,
+      "expected_sha256": "4b4e6e61c928bafe85a6f05ceca81e3990f70dc7fd3038f6c26df57e01f078f8",
+      "actual_sha256": "4b4e6e61c928bafe85a6f05ceca81e3990f70dc7fd3038f6c26df57e01f078f8"
+    },
+    {
+      "check": "reference_hash:summary.json",
+      "passed": true,
+      "expected_sha256": "f1cc64b79541c892663a934e180c73e181d503fcf510b13c2e5080a4d40f2938",
+      "actual_sha256": "f1cc64b79541c892663a934e180c73e181d503fcf510b13c2e5080a4d40f2938"
+    },
+    {
+      "check": "science_commit_and_source_count",
+      "passed": true,
+      "count": 11
+    },
+    {
+      "check": "science_blob_hash:tools/run_pasa_repair_pilot.py",
+      "passed": true,
+      "expected_sha256": "b78c96b1515fbde65b95ee4caa3c8cc4bdd1a7e346fec6f249d9c82497a985cd",
+      "actual_sha256": "b78c96b1515fbde65b95ee4caa3c8cc4bdd1a7e346fec6f249d9c82497a985cd"
+    },
+    {
+      "check": "science_blob_hash:pasa_region_inputs.py",
+      "passed": true,
+      "expected_sha256": "acca965c9fcd1985b71d99664dac464906314c4fe0aa33a42453108aa440e047",
+      "actual_sha256": "acca965c9fcd1985b71d99664dac464906314c4fe0aa33a42453108aa440e047"
+    },
+    {
+      "check": "science_blob_hash:pasa_repair_pilot.py",
+      "passed": true,
+      "expected_sha256": "e7a2615b08c87ed2bf55994eaa76745a09efbf66c9d85831cf547f071a9140d2",
+      "actual_sha256": "e7a2615b08c87ed2bf55994eaa76745a09efbf66c9d85831cf547f071a9140d2"
+    },
+    {
+      "check": "science_blob_hash:train_semantic_alignment.py",
+      "passed": true,
+      "expected_sha256": "4866819a8387414ecf8e08e9a2788c10e10d68728eca3e16f3d5c5b92977a4aa",
+      "actual_sha256": "4866819a8387414ecf8e08e9a2788c10e10d68728eca3e16f3d5c5b92977a4aa"
+    },
+    {
+      "check": "science_blob_hash:train_recent_alignment.py",
+      "passed": true,
+      "expected_sha256": "d3a6b14cc3fd0e479e38015dc3dff72d547939d10e72445bde2310c9e1896937",
+      "actual_sha256": "d3a6b14cc3fd0e479e38015dc3dff72d547939d10e72445bde2310c9e1896937"
+    },
+    {
+      "check": "science_blob_hash:semantic_evaluation.py",
+      "passed": true,
+      "expected_sha256": "9bc8a8f0638fea766018a2531132d7dffcaae2201760519947bd3d3dad984a0c",
+      "actual_sha256": "9bc8a8f0638fea766018a2531132d7dffcaae2201760519947bd3d3dad984a0c"
+    },
+    {
+      "check": "science_blob_hash:experiment_dataset.py",
+      "passed": true,
+      "expected_sha256": "abc522fdf082fa3ea566912641158d51662969a56ac7a3a36709bf176d75af32",
+      "actual_sha256": "abc522fdf082fa3ea566912641158d51662969a56ac7a3a36709bf176d75af32"
+    },
+    {
+      "check": "science_blob_hash:experiment_model.py",
+      "passed": true,
+      "expected_sha256": "63da62cfe93727741dffcbbc77a813077d654cf4276d535d0a9bc16d29b851a0",
+      "actual_sha256": "63da62cfe93727741dffcbbc77a813077d654cf4276d535d0a9bc16d29b851a0"
+    },
+    {
+      "check": "science_blob_hash:dataset.py",
+      "passed": true,
+      "expected_sha256": "d4dbc70be228a09d574724dfa11bd1c4be07a03cc50aa53d85c9619fdda5e8f1",
+      "actual_sha256": "d4dbc70be228a09d574724dfa11bd1c4be07a03cc50aa53d85c9619fdda5e8f1"
+    },
+    {
+      "check": "science_blob_hash:recent_alignment.py",
+      "passed": true,
+      "expected_sha256": "bb03fdbcd9adfd0680198d703d1d80ffbfa162e38090dcea19e561b4b91a47c6",
+      "actual_sha256": "bb03fdbcd9adfd0680198d703d1d80ffbfa162e38090dcea19e561b4b91a47c6"
+    },
+    {
+      "check": "science_blob_hash:json_results.py",
+      "passed": true,
+      "expected_sha256": "f51f60b680a937120244ab7c792bcdd8875df6a95b90bb599a611610a782681d",
+      "actual_sha256": "f51f60b680a937120244ab7c792bcdd8875df6a95b90bb599a611610a782681d"
+    },
+    {
+      "check": "coordinator_blob_hash",
+      "passed": true,
+      "expected_sha256": "abe646432180e8f8ad000cb125ebb5d401dab981667309ec9223dc1faaf4ba4f",
+      "actual_sha256": "abe646432180e8f8ad000cb125ebb5d401dab981667309ec9223dc1faaf4ba4f"
+    },
+    {
+      "check": "repeat_identity",
+      "passed": true
+    },
+    {
+      "check": "repeat_completion",
+      "passed": true
+    },
+    {
+      "check": "two_first_attempts_only",
+      "passed": true,
+      "count": 2
+    },
+    {
+      "check": "seed_42:protocol_difference",
+      "passed": true,
+      "differing_keys": []
+    },
+    {
+      "check": "seed_42:shared_inputs.json",
+      "passed": true,
+      "actual_sha256": "161d45520b856df10d733622eaea213b74744490939d1becdd6a38ea6ce6051f"
+    },
+    {
+      "check": "seed_42:shared_anchor_vocab.json",
+      "passed": true,
+      "actual_sha256": "699bb59ad4863fad1e05ed303c82e0b7a1da9569475657ff2045130026434e6f"
+    },
+    {
+      "check": "seed_42:split_integrity",
+      "passed": true,
+      "train_count": 435,
+      "validation_count": 63
+    },
+    {
+      "check": "seed_42:manifest_membership_and_presence",
+      "passed": true,
+      "count": 498
+    },
+    {
+      "check": "seed_42:common_exclusions",
+      "passed": true,
+      "count": 3
+    },
+    {
+      "check": "seed_42:frozen_methods_and_budget",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_42:whole_roi_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 6,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_42:whole_roi_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 6,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7507111168041121,
+      "parameter_count": 409056,
+      "sha256": "b0721ae4bb8ec32f75eca840a96dbcd6daa5e8e02164e491cfc6e9000212d809"
+    },
+    {
+      "check": "seed_42:whole_roi_mass:best_map.pt",
+      "passed": true,
+      "epoch": 8,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8703703703703705,
+      "parameter_count": 409056,
+      "sha256": "a5bdbfedfeb72063f70befb0bcd604f0089bdef779ef90245d490f2e6453a59b"
+    },
+    {
+      "check": "seed_42:whole_roi_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.705659656142748,
+      "parameter_count": 409056,
+      "sha256": "0977381a8088063807a8e1f3bd5472786034eeddacaa64ffdea50fa65cdad4de"
+    },
+    {
+      "check": "seed_42:whole_roi_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_42:whole_roi_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 1,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_42:whole_roi_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:whole_roi_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_42:whole_roi_field:best_auc.pt",
+      "passed": true,
+      "epoch": 1,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7937441036776786,
+      "parameter_count": 409056,
+      "sha256": "5038c165dd12317de9c26bf9b9f0494f71cfbfd82fa4ea6da3e6a90ade48f0d0"
+    },
+    {
+      "check": "seed_42:whole_roi_field:best_map.pt",
+      "passed": true,
+      "epoch": 8,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8902116402116402,
+      "parameter_count": 409056,
+      "sha256": "52a6ee7892b27d37396d13870950e9399eccd9534085dd1819557b57c40cce73"
+    },
+    {
+      "check": "seed_42:whole_roi_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7183702971746451,
+      "parameter_count": 409056,
+      "sha256": "8b4f430b2cc745d090679f376827b082b106c27d0155fa23913d4ca1cab573ea"
+    },
+    {
+      "check": "seed_42:region_pool_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_42:region_pool_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 6,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_42:region_pool_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 6,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.717276936026936,
+      "parameter_count": 409056,
+      "sha256": "120f89cc119a179fc8d83a53a026a07ca5f5c6c9cf1485cf2fea0882eb3ffc3c"
+    },
+    {
+      "check": "seed_42:region_pool_mass:best_map.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "map",
+      "selection_metric": 0.873015873015873,
+      "parameter_count": 409056,
+      "sha256": "ae2d62470d08cda249a24c78a8ca23a5d80070c480cba20731130aa8e6dbbf97"
+    },
+    {
+      "check": "seed_42:region_pool_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.649828091706111,
+      "parameter_count": 409056,
+      "sha256": "25ca5739a3e3b90d7f8188d8e6df8948dc67339c4e5e35baf39f1cee49d92a82"
+    },
+    {
+      "check": "seed_42:region_pool_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_42:region_pool_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 3,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_42:region_pool_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_42:region_pool_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_42:region_pool_field:best_auc.pt",
+      "passed": true,
+      "epoch": 3,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7734333064949007,
+      "parameter_count": 409056,
+      "sha256": "85b27f49890024d2bb7cee7e37045b5d8b74b634440f64f40f1ea7544ef7a2e9"
+    },
+    {
+      "check": "seed_42:region_pool_field:best_map.pt",
+      "passed": true,
+      "epoch": 2,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8968253968253969,
+      "parameter_count": 409056,
+      "sha256": "93ffaddcef7d44f5057cbe37af5d2981875b87c5aea30260ead1bfac1a70b088"
+    },
+    {
+      "check": "seed_42:region_pool_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7464286585663397,
+      "parameter_count": 409056,
+      "sha256": "cf6b1f4f555d55b1bb89aae0c9402c9070953bfc3509474d1eee94036d229299"
+    },
+    {
+      "check": "seed_43:protocol_difference",
+      "passed": true,
+      "differing_keys": [
+        "repeat_reference",
+        "seed"
+      ]
+    },
+    {
+      "check": "seed_43:reference_binding",
+      "passed": true
+    },
+    {
+      "check": "seed_43:shared_inputs.json",
+      "passed": true,
+      "actual_sha256": "161d45520b856df10d733622eaea213b74744490939d1becdd6a38ea6ce6051f"
+    },
+    {
+      "check": "seed_43:shared_anchor_vocab.json",
+      "passed": true,
+      "actual_sha256": "699bb59ad4863fad1e05ed303c82e0b7a1da9569475657ff2045130026434e6f"
+    },
+    {
+      "check": "seed_43:split_integrity",
+      "passed": true,
+      "train_count": 435,
+      "validation_count": 63
+    },
+    {
+      "check": "seed_43:manifest_membership_and_presence",
+      "passed": true,
+      "count": 498
+    },
+    {
+      "check": "seed_43:common_exclusions",
+      "passed": true,
+      "count": 3
+    },
+    {
+      "check": "seed_43:frozen_methods_and_budget",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_43:whole_roi_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 5,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_43:whole_roi_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 5,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7651042429122139,
+      "parameter_count": 409056,
+      "sha256": "dfe82b6cad3bab471b76666c659fdf947ef87f6598d64bedf335ab4fbe68d6e3"
+    },
+    {
+      "check": "seed_43:whole_roi_mass:best_map.pt",
+      "passed": true,
+      "epoch": 3,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8637566137566137,
+      "parameter_count": 409056,
+      "sha256": "6b3358423388aa49d3a581b5e92768aad866db75eb243719f1a6a8182742180e"
+    },
+    {
+      "check": "seed_43:whole_roi_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.6906855389645244,
+      "parameter_count": 409056,
+      "sha256": "bacf612eed000651dbf06973e76e547d522577daa76c440f9a29c78e777d792e"
+    },
+    {
+      "check": "seed_43:whole_roi_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_43:whole_roi_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 10,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_43:whole_roi_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:whole_roi_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_43:whole_roi_field:best_auc.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.8023283356918623,
+      "parameter_count": 409056,
+      "sha256": "26740729925b591533d7ea359fc380a1edd28dbe4d7f954eaa206b7bdde66370"
+    },
+    {
+      "check": "seed_43:whole_roi_field:best_map.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8756613756613756,
+      "parameter_count": 409056,
+      "sha256": "b79781f501cf36a52e9a853485abb33bf269ae1f77cf65af25999c19a2d896f9"
+    },
+    {
+      "check": "seed_43:whole_roi_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.8023283356918623,
+      "parameter_count": 409056,
+      "sha256": "9569340ced72bdd3409124ed3fe37b3249b87a19619941abb03cd3e828d61280"
+    },
+    {
+      "check": "seed_43:region_pool_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_43:region_pool_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 7,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_43:region_pool_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.772114258527302,
+      "parameter_count": 409056,
+      "sha256": "3d94e8487abbfc0aabc56b28a054f7ccf51afcd87587485cd7a62b8251145641"
+    },
+    {
+      "check": "seed_43:region_pool_mass:best_map.pt",
+      "passed": true,
+      "epoch": 8,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8703703703703705,
+      "parameter_count": 409056,
+      "sha256": "7f38c72b047992db362a5b454fea1fd82ec109b034e00894510aefec1dbc4823"
+    },
+    {
+      "check": "seed_43:region_pool_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7605269685583695,
+      "parameter_count": 409056,
+      "sha256": "c5641f8777b3259b50f79cfa74237cf844bd8ddb76e439405427bb3c45dbe6ef"
+    },
+    {
+      "check": "seed_43:region_pool_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_43:region_pool_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 6,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_43:region_pool_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_43:region_pool_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_43:region_pool_field:best_auc.pt",
+      "passed": true,
+      "epoch": 6,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.822491724816604,
+      "parameter_count": 409056,
+      "sha256": "c5bc3db6ff2464d2ad035f7dea4a79e7bae782f171e673538ed98adfde53ffeb"
+    },
+    {
+      "check": "seed_43:region_pool_field:best_map.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8928571428571429,
+      "parameter_count": 409056,
+      "sha256": "86453be6228a932d0ef6f94aab74488124988057e4405a40181689acc5b84a20"
+    },
+    {
+      "check": "seed_43:region_pool_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.8125477805429496,
+      "parameter_count": 409056,
+      "sha256": "5cc32bca51fed693661cb86dc0c91044a88b2fd3b3ce63bcaf920bc5cafc70c9"
+    },
+    {
+      "check": "seed_44:protocol_difference",
+      "passed": true,
+      "differing_keys": [
+        "repeat_reference",
+        "seed"
+      ]
+    },
+    {
+      "check": "seed_44:reference_binding",
+      "passed": true
+    },
+    {
+      "check": "seed_44:shared_inputs.json",
+      "passed": true,
+      "actual_sha256": "161d45520b856df10d733622eaea213b74744490939d1becdd6a38ea6ce6051f"
+    },
+    {
+      "check": "seed_44:shared_anchor_vocab.json",
+      "passed": true,
+      "actual_sha256": "699bb59ad4863fad1e05ed303c82e0b7a1da9569475657ff2045130026434e6f"
+    },
+    {
+      "check": "seed_44:split_integrity",
+      "passed": true,
+      "train_count": 435,
+      "validation_count": 63
+    },
+    {
+      "check": "seed_44:manifest_membership_and_presence",
+      "passed": true,
+      "count": 498
+    },
+    {
+      "check": "seed_44:common_exclusions",
+      "passed": true,
+      "count": 3
+    },
+    {
+      "check": "seed_44:frozen_methods_and_budget",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_44:whole_roi_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 7,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_44:whole_roi_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7435918159046179,
+      "parameter_count": 409056,
+      "sha256": "75aa385238d71712c5c32778a5581b1b7642d8ff2f6e1762324a2733f14dd7f1"
+    },
+    {
+      "check": "seed_44:whole_roi_mass:best_map.pt",
+      "passed": true,
+      "epoch": 4,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8835978835978836,
+      "parameter_count": 409056,
+      "sha256": "f07e18cb38cc5fb6867718ee5682ab9dbde99ed6c0f68f92dc57e1314cb1bdeb"
+    },
+    {
+      "check": "seed_44:whole_roi_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.6990827152360969,
+      "parameter_count": 409056,
+      "sha256": "2571708678a0f5b9557f6d2a6945d48eb4b779ad26888e3e04d0ca8205756512"
+    },
+    {
+      "check": "seed_44:whole_roi_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_44:whole_roi_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 4,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_44:whole_roi_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 435
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:whole_roi_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_44:whole_roi_field:best_auc.pt",
+      "passed": true,
+      "epoch": 4,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.8212316400722197,
+      "parameter_count": 409056,
+      "sha256": "554cd806204105027fa92c4b54d86af3620018e7387cb8bbdcf9685b6db50249"
+    },
+    {
+      "check": "seed_44:whole_roi_field:best_map.pt",
+      "passed": true,
+      "epoch": 3,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8981481481481481,
+      "parameter_count": 409056,
+      "sha256": "239a8bc150db84999fec4f9df601a51643016cdbf361c209df644de3d1def73b"
+    },
+    {
+      "check": "seed_44:whole_roi_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7527387400575806,
+      "parameter_count": 409056,
+      "sha256": "ec8863e67db0f20484b104e18bd81765be5434e369e0975c85f929862b3b6bb2"
+    },
+    {
+      "check": "seed_44:region_pool_mass:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_mass:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_44:region_pool_mass:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 7,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_44:region_pool_mass:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_mass:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_mass:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_mass:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_mass:best_auc.pt",
+      "passed": true,
+      "epoch": 7,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.6533038720538721,
+      "parameter_count": 409056,
+      "sha256": "02e2bbfff5d63dd7ffe1f903cb2a92a4bad8b5f99b38b99d965f6715ccc8f828"
+    },
+    {
+      "check": "seed_44:region_pool_mass:best_map.pt",
+      "passed": true,
+      "epoch": 5,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8650793650793651,
+      "parameter_count": 409056,
+      "sha256": "769305aaa96c0b87a877e8724e5d57d7e8c90cabc2a2b4922e110e6ffb311cb3"
+    },
+    {
+      "check": "seed_44:region_pool_mass:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.6383495787179362,
+      "parameter_count": 409056,
+      "sha256": "f0a4ac889371b57d954ba793fb27a10eab869f08da75081351fe9759b4043ded"
+    },
+    {
+      "check": "seed_44:region_pool_field:configuration",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_field:ten_epochs",
+      "passed": true,
+      "count": 10
+    },
+    {
+      "check": "seed_44:region_pool_field:completion_and_first_strict_max",
+      "passed": true,
+      "selected_epoch": 3,
+      "training_steps": 2180
+    },
+    {
+      "check": "seed_44:region_pool_field:summary_traceability",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_field:encoded_view_count",
+      "passed": true,
+      "per_epoch_count": 1156
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_001",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_002",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_003",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_004",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_005",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_006",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_007",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_008",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_009",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:epoch_010",
+      "passed": true,
+      "row_count": 189,
+      "known_query_count": 120,
+      "missing_query_count": 69
+    },
+    {
+      "check": "seed_44:region_pool_field:saved_validation_replay",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_field:common_frequency_baseline",
+      "passed": true
+    },
+    {
+      "check": "seed_44:region_pool_field:best_auc.pt",
+      "passed": true,
+      "epoch": 3,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.8013351103628882,
+      "parameter_count": 409056,
+      "sha256": "4ef420f1cb1e0f1ea93205794c6a0fe724f58f22b182b9c06fbb035912607e7c"
+    },
+    {
+      "check": "seed_44:region_pool_field:best_map.pt",
+      "passed": true,
+      "epoch": 9,
+      "selection_metric_name": "map",
+      "selection_metric": 0.8783068783068784,
+      "parameter_count": 409056,
+      "sha256": "4e6dedc62f749db522c43c3cfd52d6cf2778570b70d827812108b8c5e03668bb"
+    },
+    {
+      "check": "seed_44:region_pool_field:last.pt",
+      "passed": true,
+      "epoch": 10,
+      "selection_metric_name": "biomarker_macro_auc",
+      "selection_metric": 0.7469999918671416,
+      "parameter_count": 409056,
+      "sha256": "45f429ebfdbe9ff22a81e773beb61c517a0a0f14ff96dadeeac66edb119fd623"
+    },
+    {
+      "check": "strict_json",
+      "passed": true,
+      "count": 198,
+      "invalid_count": 0
+    },
+    {
+      "check": "no_test_named_results",
+      "passed": true,
+      "count": 0
+    },
+    {
+      "check": "no_locks_or_failed_attempts",
+      "passed": true,
+      "lock_count": 0,
+      "failed_count": 0
+    },
+    {
+      "check": "total_artifact_counts",
+      "passed": true,
+      "runs": 12,
+      "new_runs": 8,
+      "epoch_records": 120,
+      "checkpoints": 36
+    },
+    {
+      "check": "frozen_code_train_validation_loader_guards",
+      "passed": true
+    }
+  ]
+}

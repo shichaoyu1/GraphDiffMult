@@ -1,0 +1,29 @@
+{
+  "ok": true,
+  "html": "report.html",
+  "stages": {
+    "validation": "passed",
+    "package": "passed",
+    "verification": "structural_only"
+  },
+  "browserWarning": {
+    "code": "browser_unavailable",
+    "message": "No installed Chromium headless-shell executable was found; no browser was installed."
+  },
+  "counts": {
+    "blocks": 17,
+    "charts": 1,
+    "html": 0,
+    "metrics": 0,
+    "tables": 4
+  },
+  "sourceDialog": "not_verified",
+  "sourceInteraction": "not_verified",
+  "viewports": [],
+  "timings": {
+    "validateAndPackageMs": 2445.8,
+    "staticChartExtractionMs": 142.4,
+    "structuralVerificationMs": 45.2,
+    "totalMs": 2498
+  }
+}
